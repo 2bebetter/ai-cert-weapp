@@ -19,6 +19,7 @@ Page({
     feedback: null,
     isFavorited: false,
     isWrongBook: false,
+    hasNote: false,
     noteText: '',
     noteModalVisible: false,
     typeLabel: '',
@@ -39,7 +40,7 @@ Page({
       this.loadQuestions()
     }
     if (this.data.currentQuestion) {
-      this.updateQuestionMeta(this.data.currentQuestion)
+      this.syncQuestionMeta()
     }
   },
 
@@ -74,7 +75,7 @@ Page({
     })
 
     if (currentQuestion) {
-      this.updateQuestionMeta(currentQuestion)
+      this.syncQuestionMeta()
     }
   },
 
@@ -117,7 +118,7 @@ Page({
       renderOptions: currentQuestion
         ? this.buildRenderOptions(currentQuestion, [], false) : []
     })
-    if (currentQuestion) this.updateQuestionMeta(currentQuestion)
+    if (currentQuestion) this.syncQuestionMeta()
   },
 
   buildRenderOptions(question, selectedKeys, submitted) {
@@ -141,25 +142,25 @@ Page({
     })
   },
 
-  updateQuestionMeta(question) {
-    const typeLabel = getTypeLabel(question.type)
-    const typeTagClass = question.type === 'judge' ? 'tag' :
-      question.type === 'single' ? 'tag tag-success' : 'tag tag-warning'
-    const id = String(question.id)
-    this.setData({
-      typeLabel,
-      typeTagClass,
-      isFavorited: getFavorites().has(id),
-      isWrongBook: getWrongBook().includes(id),
-      noteText: (getNotes().theory || {})[id] || ''
-    })
-  },
-
-  updateFavoriteStatus() {
+  /** 从本地存储同步本题的收藏/错题本/笔记状态 */
+  syncQuestionMeta() {
     const q = this.data.currentQuestion
     if (!q) return
-    const favs = getFavorites()
-    this.setData({ isFavorited: favs.has(String(q.id)) })
+    const qid = String(q.id)
+    try {
+      this.setData({
+        typeLabel: getTypeLabel(q.type),
+        typeTagClass: q.type === 'judge' ? 'tag' :
+          q.type === 'single' ? 'tag tag-success' : 'tag tag-warning',
+        isFavorited: getFavorites().has(qid),
+        isWrongBook: getWrongBook().includes(qid),
+        hasNote: !!((getNotes().theory || {})[qid])
+      })
+    } catch (e) {
+      console.warn('syncQuestionMeta 失败', e)
+      this.setData({ isFavorited: false, isWrongBook: false, hasNote: false })
+      wx.showToast({ title: '状态读取失败, 请重试', icon: 'none' })
+    }
   },
 
   onSelectOption(e) {
@@ -218,25 +219,10 @@ Page({
       attemptedAt: new Date().toISOString()
     })
 
-    // 答错自动加入错题本，答对自动移出
-    if (!result.correct) {
-      addWrongBook(qid)
-      this.setData({ isWrongBook: true })
-    } else {
-      removeWrongBook(qid)
-      this.setData({ isWrongBook: false })
-    }
+    // 注意：答错不自动加入错题本，由用户手动控制
   },
 
-  toggleFavorite() {
-    const q = this.data.currentQuestion
-    if (!q) return
-    const nowFav = toggleFavorite(q.id)
-    this.setData({ isFavorited: nowFav })
-    wx.showToast({ title: nowFav ? '已收藏' : '已取消', icon: 'none' })
-  },
-
-  /** 题头图标按钮统一分发 */
+  /** 右上角图标统一分发 */
   onHeadAction(e) {
     const action = e.currentTarget.dataset.action
     if (action === 'wrongbook') this.toggleWrongBook()
@@ -244,19 +230,32 @@ Page({
     else if (action === 'favorite') this.toggleFavorite()
   },
 
+  toggleFavorite() {
+    const q = this.data.currentQuestion
+    if (!q) return
+    const nowFav = toggleFavorite(q.id)
+    this.setData({ isFavorited: nowFav })
+    wx.showToast({ title: nowFav ? '已收藏' : '已取消收藏', icon: 'none' })
+  },
+
   toggleWrongBook() {
     const q = this.data.currentQuestion
     if (!q) return
     const qid = String(q.id)
-    const inBook = getWrongBook().includes(qid)
-    if (inBook) {
-      removeWrongBook(qid)
-      this.setData({ isWrongBook: false })
-      wx.showToast({ title: '已移出错题本', icon: 'none' })
-    } else {
-      addWrongBook(qid)
-      this.setData({ isWrongBook: true })
-      wx.showToast({ title: '已加入错题本', icon: 'none' })
+    try {
+      const inBook = getWrongBook().includes(qid)
+      if (inBook) {
+        removeWrongBook(qid)
+        this.setData({ isWrongBook: false })
+        wx.showToast({ title: '已移出错题本', icon: 'none' })
+      } else {
+        addWrongBook(qid)
+        this.setData({ isWrongBook: true })
+        wx.showToast({ title: '已加入错题本', icon: 'none' })
+      }
+    } catch (e) {
+      console.warn('toggleWrongBook 失败', e)
+      wx.showToast({ title: '操作失败，请重试', icon: 'none' })
     }
   },
 
@@ -280,9 +279,17 @@ Page({
   saveNote() {
     const q = this.data.currentQuestion
     if (!q) return
-    saveTheoryNote(String(q.id), this.data.noteText)
-    this.setData({ noteModalVisible: false })
-    wx.showToast({ title: '笔记已保存', icon: 'success' })
+    try {
+      saveTheoryNote(String(q.id), this.data.noteText)
+      this.setData({
+        noteModalVisible: false,
+        hasNote: !!this.data.noteText
+      })
+      wx.showToast({ title: '笔记已保存', icon: 'success' })
+    } catch (e) {
+      console.warn('saveNote 失败', e)
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+    }
   },
 
   /** 从复习页跳转到指定题目 */
@@ -298,7 +305,7 @@ Page({
         feedback: null,
         renderOptions: q ? this.buildRenderOptions(q, [], false) : []
       })
-      this.updateQuestionMeta(q)
+      this.syncQuestionMeta()
     }
   },
 
@@ -314,7 +321,7 @@ Page({
       feedback: null,
       renderOptions: q ? this.buildRenderOptions(q, [], false) : []
     })
-    this.updateQuestionMeta(q)
+    this.syncQuestionMeta()
   },
 
   nextQuestion() {
@@ -329,6 +336,6 @@ Page({
       feedback: null,
       renderOptions: q ? this.buildRenderOptions(q, [], false) : []
     })
-    this.updateQuestionMeta(q)
+    this.syncQuestionMeta()
   }
 })

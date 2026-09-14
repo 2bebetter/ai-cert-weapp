@@ -36,9 +36,14 @@
       <view class="question-head">
         <text class="tag {{typeTagClass}}">{{typeLabel}}</text>
         <text class="question-level">{{currentQuestion.level}}</text>
-        <text class="icon-btn" data-action="wrongbook" bindtap="onHeadAction">{{isWrongBook ? '❌' : '⬜'}}</text>
-        <text class="icon-btn" data-action="note" bindtap="onHeadAction">📝</text>
-        <text class="icon-btn favorite-btn" data-action="favorite" bindtap="onHeadAction">{{isFavorited ? '★' : '☆'}}</text>
+        <view class="question-actions">
+          <!-- 错题本 bookmark：仅判题结果态显示 -->
+          <view wx:if="{{submitted}}" class="head-icon {{isWrongBook ? 'icon-bookmark-active' : 'icon-bookmark'}}" data-action="wrongbook" bindtap="onHeadAction"></view>
+          <!-- 笔记 note：仅判题结果态显示 -->
+          <view wx:if="{{submitted}}" class="head-icon {{hasNote ? 'icon-note-active' : 'icon-note'}}" data-action="note" bindtap="onHeadAction"></view>
+          <!-- 收藏 star：全程可用 -->
+          <view class="head-icon {{isFavorited ? 'icon-star-active' : 'icon-star'}}" data-action="favorite" bindtap="onHeadAction"></view>
+        </view>
       </view>
 
       <text class="question-text">{{currentQuestion.question}}</text>
@@ -69,16 +74,6 @@
       <view wx:if="{{feedback}}" class="feedback {{feedback.class}}">
         <text class="feedback-title">{{feedback.title}}</text>
         <text class="feedback-body">{{feedback.body}}</text>
-      </view>
-
-      <!-- 提交后的操作按钮 -->
-      <view wx:if="{{submitted}}" class="post-actions">
-        <button class="btn btn-ghost btn-sm" bindtap="toggleWrongBook">
-          {{isWrongBook ? '✅ 已在错题本' : '➕ 加入错题本'}}
-        </button>
-        <button class="btn btn-ghost btn-sm" bindtap="openNoteModal">
-          📝 {{noteText ? '编辑笔记' : '记笔记'}}
-        </button>
       </view>
     </view>
 
