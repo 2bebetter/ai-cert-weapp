@@ -32,13 +32,13 @@
   </view>
 
   <view class="entry-grid">
-    <navigator url="/pages/theory/theory" class="entry-card" hover-class="entry-card-hover">
+    <navigator url="/pages/theory/theory" open-type="switchTab" class="entry-card" hover-class="entry-card-hover">
       <text class="entry-num">01 · 理论</text>
       <text class="entry-title">理论学习</text>
       <text class="entry-desc">单题练习、错题本、模拟考试和统计</text>
     </navigator>
 
-    <navigator url="/pages/practical/practical" class="entry-card" hover-class="entry-card-hover">
+    <navigator url="/pages/practical/practical" open-type="switchTab" class="entry-card" hover-class="entry-card-hover">
       <text class="entry-num">02 · 实操</text>
       <text class="entry-title">实操学习</text>
       <text class="entry-desc">代码填空和文档作答练习</text>
@@ -53,6 +53,6 @@
 
   <view class="footer-links">
     <navigator url="/pages/review/review" class="footer-link">📕 错题本与复习</navigator>
-    <navigator url="/pages/settings/settings" class="footer-link">⚙️ 设置与 AI 配置</navigator>
+    <navigator url="/pages/settings/settings" open-type="switchTab" class="footer-link">⚙️ 设置与 AI 配置</navigator>
   </view>
 </view>
