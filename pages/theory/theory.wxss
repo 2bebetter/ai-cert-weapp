@@ -38,17 +38,24 @@
 .question-head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 12px;
 }
 .question-level {
   font-size: 11px;
   color: var(--text-3);
+  margin-right: auto;
+}
+.btn-icon {
+  font-size: 16px;
+  padding: 2px 4px;
+  min-width: auto;
+  min-height: auto;
+  line-height: 1;
 }
 .favorite-btn {
-  margin-left: auto;
   font-size: 18px;
-  padding: 0;
+  padding: 2px 4px;
   min-width: auto;
   min-height: auto;
   line-height: 1;
@@ -111,5 +118,54 @@
   display: flex;
   justify-content: space-between;
   padding: 0 16px;
+  margin-top: 12px;
+}
+
+/* 提交后的操作按钮 */
+.post-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+/* 笔记弹窗 */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.overlay.hidden { display: none; }
+.note-modal {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: 85%;
+  max-width: 360px;
+}
+.note-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 12px;
+}
+.note-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+.note-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
   margin-top: 12px;
 }

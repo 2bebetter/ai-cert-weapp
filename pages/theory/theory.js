@@ -1,7 +1,9 @@
 import { scoreTheory, getTypeLabel } from '../../utils/domain'
 import {
   getTheoryAttempts, addTheoryAttempt,
-  getFavorites, toggleFavorite
+  getFavorites, toggleFavorite,
+  addWrongBook, removeWrongBook, getWrongBook,
+  saveTheoryNote, getNotes
 } from '../../utils/storage'
 
 Page({
@@ -11,11 +13,14 @@ Page({
     filtered: [],
     currentIndex: 0,
     currentQuestion: null,
-    renderOptions: [],   // [{ key, value, checked, cls }]
+    renderOptions: [],
     selectedKeys: [],
     submitted: false,
     feedback: null,
     isFavorited: false,
+    isWrongBook: false,
+    noteText: '',
+    noteModalVisible: false,
     typeLabel: '',
     typeTagClass: 'tag',
     filterTypes: ['全部题型', '判断题', '单选题', '多选题'],
@@ -34,7 +39,7 @@ Page({
       this.loadQuestions()
     }
     if (this.data.currentQuestion) {
-      this.updateFavoriteStatus()
+      this.updateQuestionMeta(this.data.currentQuestion)
     }
   },
 
@@ -115,7 +120,6 @@ Page({
     if (currentQuestion) this.updateQuestionMeta(currentQuestion)
   },
 
-  /** 核心：把选项渲染信息全部预计算进 data */
   buildRenderOptions(question, selectedKeys, submitted) {
     if (!question || !question.options) return []
     return question.options.map((opt) => {
@@ -141,8 +145,14 @@ Page({
     const typeLabel = getTypeLabel(question.type)
     const typeTagClass = question.type === 'judge' ? 'tag' :
       question.type === 'single' ? 'tag tag-success' : 'tag tag-warning'
-    this.setData({ typeLabel, typeTagClass })
-    this.updateFavoriteStatus()
+    const id = String(question.id)
+    this.setData({
+      typeLabel,
+      typeTagClass,
+      isFavorited: getFavorites().has(id),
+      isWrongBook: getWrongBook().includes(id),
+      noteText: (getNotes().theory || {})[id] || ''
+    })
   },
 
   updateFavoriteStatus() {
@@ -177,6 +187,7 @@ Page({
 
     const result = scoreTheory(question, this.data.selectedKeys)
     const confidence = Number.isInteger(question.confidence) ? question.confidence : 0
+    const qid = String(question.id)
 
     if (!question.answer.length || question.answer_status === 'unverified' || confidence === 0) {
       this.setData({
@@ -200,12 +211,21 @@ Page({
 
     addTheoryAttempt({
       id: `${question.id}_${Date.now()}`,
-      questionId: String(question.id),
+      questionId: qid,
       type: question.type,
       selected: this.data.selectedKeys,
       correct: result.correct,
       attemptedAt: new Date().toISOString()
     })
+
+    // 答错自动加入错题本，答对自动移出
+    if (!result.correct) {
+      addWrongBook(qid)
+      this.setData({ isWrongBook: true })
+    } else {
+      removeWrongBook(qid)
+      this.setData({ isWrongBook: false })
+    }
   },
 
   toggleFavorite() {
@@ -214,6 +234,64 @@ Page({
     const nowFav = toggleFavorite(q.id)
     this.setData({ isFavorited: nowFav })
     wx.showToast({ title: nowFav ? '已收藏' : '已取消', icon: 'none' })
+  },
+
+  toggleWrongBook() {
+    const q = this.data.currentQuestion
+    if (!q) return
+    const qid = String(q.id)
+    const inBook = getWrongBook().includes(qid)
+    if (inBook) {
+      removeWrongBook(qid)
+      this.setData({ isWrongBook: false })
+      wx.showToast({ title: '已移出错题本', icon: 'none' })
+    } else {
+      addWrongBook(qid)
+      this.setData({ isWrongBook: true })
+      wx.showToast({ title: '已加入错题本', icon: 'none' })
+    }
+  },
+
+  openNoteModal() {
+    const q = this.data.currentQuestion
+    if (!q) return
+    this.setData({
+      noteModalVisible: true,
+      noteText: (getNotes().theory || {})[String(q.id)] || ''
+    })
+  },
+
+  closeNoteModal() {
+    this.setData({ noteModalVisible: false })
+  },
+
+  onNoteInput(e) {
+    this.setData({ noteText: e.detail.value })
+  },
+
+  saveNote() {
+    const q = this.data.currentQuestion
+    if (!q) return
+    saveTheoryNote(String(q.id), this.data.noteText)
+    this.setData({ noteModalVisible: false })
+    wx.showToast({ title: '笔记已保存', icon: 'success' })
+  },
+
+  /** 从复习页跳转到指定题目 */
+  navigateToQuestion(id) {
+    const idx = this.data.filtered.findIndex((q) => String(q.id) === id)
+    if (idx >= 0) {
+      const q = this.data.filtered[idx]
+      this.setData({
+        currentIndex: idx,
+        currentQuestion: q,
+        selectedKeys: [],
+        submitted: false,
+        feedback: null,
+        renderOptions: q ? this.buildRenderOptions(q, [], false) : []
+      })
+      this.updateQuestionMeta(q)
+    }
   },
 
   prevQuestion() {

@@ -1,7 +1,7 @@
 import { buildReviewQueues, getTypeLabel } from '../../utils/domain'
 import {
   getWrongBook, getTheoryAttempts, getTheorySummaries,
-  getNotes, getReviewStates
+  getNotes, getReviewStates, getFavorites
 } from '../../utils/storage'
 
 Page({
@@ -9,6 +9,7 @@ Page({
     tabs: [
       { key: 'wrong', label: '错题', count: 0 },
       { key: 'repeatedWrong', label: '反复错', count: 0 },
+      { key: 'favorites', label: '收藏', count: 0 },
       { key: 'notes', label: '有笔记', count: 0 }
     ],
     activeTab: 'wrong',
@@ -28,8 +29,9 @@ Page({
     const attempts = getTheoryAttempts()
     const notes = getNotes().theory || {}
     const reviewStates = getReviewStates()
+    const favoriteIds = getFavorites()
 
-    // 构建复习队列
+    // 构建作答历史
     const histories = {}
     for (const a of attempts) {
       const id = a.questionId
@@ -50,7 +52,7 @@ Page({
       }
     }
 
-    const queues = buildReviewQueues(questions, histories, states)
+    const queues = buildReviewQueues(questions, histories, states, favoriteIds)
     const activeKey = this.data.activeTab
     const ids = queues[activeKey] || []
 
@@ -93,11 +95,9 @@ Page({
 
   openQuestion(e) {
     const id = e.currentTarget.dataset.id
-    // 跳转到理论学习页并定位到该题
     wx.switchTab({
       url: '/pages/theory/theory',
       success: () => {
-        // 通过全局事件传递题号（后续完善）
         const pages = getCurrentPages()
         const theoryPage = pages.find((p) => p.route === 'pages/theory/theory')
         if (theoryPage) theoryPage.navigateToQuestion(id)

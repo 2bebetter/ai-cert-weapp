@@ -133,10 +133,11 @@ export function buildPracticalProgress(tasks, submissions) {
 }
 
 /** 构建复习队列 */
-export function buildReviewQueues(questions, histories, reviewStates) {
+export function buildReviewQueues(questions, histories, reviewStates, favoriteIds = new Set()) {
   const wrong = []
   const repeatedWrong = []
   const notes = []
+  const favorites = []
   for (const q of questions) {
     const id = String(q.id)
     const state = reviewStates[id] || {}
@@ -150,8 +151,11 @@ export function buildReviewQueues(questions, histories, reviewStates) {
     if (state.note && !state.noteSuppressed) {
       notes.push(id)
     }
+    if (favoriteIds.has(id)) {
+      favorites.push(id)
+    }
   }
-  return { wrong, repeatedWrong, notes }
+  return { wrong, repeatedWrong, notes, favorites }
 }
 
 const TYPE_LABELS = { judge: '判断题', single: '单选题', multiple: '多选题' }
