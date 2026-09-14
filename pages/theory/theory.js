@@ -148,10 +148,11 @@ Page({
   },
 
   optionClass(key) {
-    const q = this.data.currentQuestion
-    if (!this.data.submitted || !q) return ''
-    const isCorrect = q.answer.includes(key)
     const isSelected = this.data.selectedKeys.includes(key)
+    if (!this.data.submitted) return isSelected ? 'selected' : ''
+    const q = this.data.currentQuestion
+    if (!q) return ''
+    const isCorrect = q.answer.includes(key)
     if (isCorrect) return 'correct'
     if (isSelected && !isCorrect) return 'wrong'
     return ''

@@ -153,7 +153,7 @@ Page({
     const q = this.data.currentQuestion
     if (!q) return ''
     const keys = this.data.answers[q.id] || []
-    return keys.indexOf(key) >= 0 ? 'correct' : ''
+    return keys.indexOf(key) >= 0 ? 'selected' : ''
   },
 
   toggleMark() {

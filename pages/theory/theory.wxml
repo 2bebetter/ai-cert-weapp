@@ -56,7 +56,7 @@
             checked="{{selectedKeys.indexOf(item.key) > -1}}" color="#007aff" />
           <checkbox wx:elif="{{currentQuestion.type === 'multiple'}}"
             checked="{{selectedKeys.indexOf(item.key) > -1}}" color="#007aff" />
-          <text>{{item.key}}. {{item.value}}</text>
+          <text class="option-label">{{item.key}}. {{item.value}}</text>
         </view>
       </view>
 
