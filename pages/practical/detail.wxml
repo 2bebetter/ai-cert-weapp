@@ -15,18 +15,15 @@
   </view>
 
   <block wx:else>
+    <!-- 任务标题与描述 -->
     <view class="task-header">
-      <text class="tag {{task.type === 'code' ? '' : 'tag-warning'}}">{{task.type === 'code' ? '代码填空' : '文档作答'}}</text>
+      <view class="task-tags">
+        <text class="tag {{task.type === 'code' ? '' : 'tag-warning'}}">{{task.type === 'code' ? '代码填空' : '文档作答'}}</text>
+        <text class="tag tag-success">{{task.maxScore}} 分</text>
+      </view>
       <text class="task-title">{{task.title}}</text>
-      <text class="task-question">{{task.question}}</text>
-    </view>
-
-    <!-- 评分点 -->
-    <view class="score-section" wx:if="{{task.scoreItems.length}}">
-      <text class="section-title">评分点（{{task.maxScore}} 分）</text>
-      <view wx:for="{{task.scoreItems}}" wx:key="index" class="score-item">
-        <text class="score-desc">{{item.desc}}</text>
-        <text class="score-value">{{item.score}} 分</text>
+      <view class="task-question">
+        <text>{{task.question}}</text>
       </view>
     </view>
 
@@ -34,16 +31,30 @@
     <view class="answer-section">
       <text class="section-title">作答区</text>
 
-      <!-- 代码填空 -->
+      <!-- 代码填空：显示代码模板 + 填空题 -->
       <block wx:if="{{task.type === 'code'}}">
-        <textarea
-          class="code-area"
-          value="{{answer}}"
-          bindinput="onAnswerInput"
-          placeholder="在此填写代码…"
-          maxlength="-1"
-          auto-height
-        ></textarea>
+        <scroll-view class="code-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+          <view class="code-editor">
+            <view wx:for="{{codeLines}}" wx:for-item="line" wx:key="*this" class="code-line">
+              <text class="line-num">{{index + 1}}</text>
+              <view class="line-content">
+                <block wx:for="{{line}}" wx:for-item="part" wx:key="*this">
+                  <!-- 留空区 -->
+                  <input wx:if="{{part.kind === 'blank'}}"
+                    class="code-blank"
+                    value="{{blankValues[part.id] || ''}}"
+                    data-blank-id="{{part.id}}"
+                    bindinput="onBlankInput"
+                    placeholder="______"
+                    adjust-position="{{false}}"
+                  />
+                  <!-- 普通代码 -->
+                  <text wx:else class="code-text">{{part.value}}</text>
+                </block>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
       </block>
 
       <!-- 文档作答 -->
@@ -58,10 +69,25 @@
         ></textarea>
       </block>
 
+      <!-- 自评评分点（复选框） -->
+      <view class="self-score" wx:if="{{task.scoreItems.length}}">
+        <text class="section-title">自评评分点</text>
+        <text class="score-hint">勾选你认为已完成的评分项，系统自动计算自评分</text>
+        <view wx:for="{{task.scoreItems}}" wx:key="id" class="score-item" bindtap="toggleScoreItem" data-index="{{index}}">
+          <checkbox checked="{{scoreChecked[index]}}" color="#007aff" />
+          <text class="score-desc">{{item.desc}}</text>
+          <text class="score-value">{{item.score}} 分</text>
+        </view>
+        <view class="score-total">
+          <text>自评总分：</text>
+          <text class="total-num">{{calculatedScore}} / {{task.maxScore}}</text>
+        </view>
+      </view>
+
       <!-- 操作按钮 -->
       <view class="actions">
         <button class="btn btn-secondary" bindtap="saveDraft">保存草稿</button>
-        <button class="btn btn-primary" bindtap="submitGrade" disabled="{{!answer.trim()}}">
+        <button class="btn btn-primary" bindtap="submitGrade" disabled="{{!hasContent}}">
           ✅ AI 评测
         </button>
       </view>
