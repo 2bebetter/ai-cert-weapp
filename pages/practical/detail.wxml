@@ -46,7 +46,7 @@
       <text class="section-title">作答区</text>
 
       <!-- 代码填空：显示代码模板 + 填空题 -->
-      <block wx:if="{{task.type === 'code'}}">
+      <block wx:if="{{task.type === 'code' && codeLines.length}}">
         <scroll-view class="code-scroll" scroll-y enhanced show-scrollbar="{{false}}">
           <view class="code-editor">
             <view wx:for="{{codeLines}}" wx:for-item="line" wx:key="index" class="code-line">
@@ -69,6 +69,19 @@
             </view>
           </view>
         </scroll-view>
+      </block>
+
+      <!-- 代码填空（兜底：无模板时用纯文本框） -->
+      <block wx:elif="{{task.type === 'code'}}">
+        <view class="no-template-tip">等待代码模板加载，你可以先在这里写代码</view>
+        <textarea
+          class="code-area"
+          value="{{answer}}"
+          bindinput="onAnswerInput"
+          placeholder="在此写代码…import pandas as pd"
+          maxlength="-1"
+          auto-height
+        ></textarea>
       </block>
 
       <!-- 文档作答 -->

@@ -87,6 +87,27 @@
 }
 .code-blank::placeholder { color: #666; }
 
+/* 代码填空无模板时 */
+.no-template-tip {
+  font-size: 12px;
+  color: var(--text-3);
+  padding: 4px 0 8px;
+  display: block;
+}
+.code-area {
+  width: 100%;
+  min-height: 200px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
 /* 文档作答区 */
 .doc-area {
   width: 100%;
