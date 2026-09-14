@@ -50,5 +50,10 @@ Page({
         unattempted: tasks.length
       }
     })
+  },
+
+  openTask(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({ url: `/pages/practical/detail?questionId=${id}` })
   }
 })

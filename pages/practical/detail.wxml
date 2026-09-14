@@ -1,0 +1,74 @@
+<view class="page">
+  <!-- 加载中 -->
+  <view class="loading-wrap" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中…</text>
+  </view>
+
+  <block wx:else>
+    <view class="task-header">
+      <text class="tag {{task.type === 'code' ? '' : 'tag-warning'}}">{{task.type === 'code' ? '代码填空' : '文档作答'}}</text>
+      <text class="task-title">{{task.title}}</text>
+      <text class="task-question">{{task.question}}</text>
+    </view>
+
+    <!-- 评分点 -->
+    <view class="score-section" wx:if="{{task.scoreItems.length}}">
+      <text class="section-title">评分点（{{task.maxScore}} 分）</text>
+      <view wx:for="{{task.scoreItems}}" wx:key="index" class="score-item">
+        <text class="score-desc">{{item.desc}}</text>
+        <text class="score-value">{{item.score}} 分</text>
+      </view>
+    </view>
+
+    <!-- 作答区 -->
+    <view class="answer-section">
+      <text class="section-title">作答区</text>
+
+      <!-- 代码填空 -->
+      <block wx:if="{{task.type === 'code'}}">
+        <textarea
+          class="code-area"
+          value="{{answer}}"
+          bindinput="onAnswerInput"
+          placeholder="在此填写代码…"
+          maxlength="-1"
+          auto-height
+        ></textarea>
+      </block>
+
+      <!-- 文档作答 -->
+      <block wx:else>
+        <textarea
+          class="doc-area"
+          value="{{answer}}"
+          bindinput="onAnswerInput"
+          placeholder="在此填写作答内容…"
+          maxlength="-1"
+          auto-height
+        ></textarea>
+      </block>
+
+      <!-- 操作按钮 -->
+      <view class="actions">
+        <button class="btn btn-secondary" bindtap="saveDraft">保存草稿</button>
+        <button class="btn btn-primary" bindtap="submitGrade" disabled="{{!answer.trim()}}">
+          ✅ AI 评测
+        </button>
+      </view>
+
+      <!-- 评分结果 -->
+      <view wx:if="{{gradeResult}}" class="grade-result {{gradeResult.error ? 'bad' : 'ok'}}">
+        <block wx:if="{{gradeResult.error}}">
+          <text class="grade-title">判分失败：{{gradeResult.error}}</text>
+        </block>
+        <block wx:else>
+          <text class="grade-title">AI 判分：{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分</text>
+          <view wx:for="{{gradeResult.items}}" wx:key="id" class="grade-item">
+            <text>{{item.id}}：{{item.score}} / {{item.max_score}} · {{item.reason}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+  </block>
+</view>

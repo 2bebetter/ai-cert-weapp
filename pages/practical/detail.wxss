@@ -1,0 +1,103 @@
+.page { padding: 0 16px 32px; }
+
+.task-header {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: var(--shadow);
+}
+.task-title {
+  font-size: 16px;
+  font-weight: 600;
+  display: block;
+  margin: 8px 0 6px;
+}
+.task-question {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.6;
+  display: block;
+}
+
+.score-section {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: var(--shadow);
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 10px;
+}
+.score-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.score-item:last-child { border-bottom: none; }
+.score-desc { flex: 1; color: var(--text-2); line-height: 1.5; margin-right: 8px; }
+.score-value { color: var(--primary); font-weight: 500; flex-shrink: 0; }
+
+.answer-section {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: var(--shadow);
+}
+.code-area {
+  width: 100%;
+  min-height: 200px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+.doc-area {
+  width: 100%;
+  min-height: 160px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  box-sizing: border-box;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.actions .btn { flex: 1; }
+
+.grade-result {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.grade-result.ok { background: #e8f8ee; }
+.grade-result.bad { background: #ffe8e6; }
+.grade-title {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8px;
+}
+.grade-item {
+  padding: 4px 0;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}

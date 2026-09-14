@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/theory/theory",
     "pages/practical/practical",
+    "pages/practical/detail",
     "pages/exam/exam",
     "pages/review/review",
     "pages/settings/settings"
