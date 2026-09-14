@@ -33,27 +33,46 @@ App({
     if (this.globalData.questions) return this.globalData.questions
 
     try {
-      const res = await wx.request({
-        url: 'https://your-cdn-or-cloud-url/questions.json',
-        // 或将题库放在云存储中，用 wx.cloud.downloadFile
+      // 从云存储下载题库
+      const { tempFilePath } = await wx.cloud.downloadFile({
+        fileID: 'cloud://cloud1-d0g57699wf3dd062e.636c-cloud1-d0g57699wf3dd062e-1487644378/questions.json'
       })
 
-      // 如果从 CDN/云存储加载失败，从本地兜底
-      if (!res.data) {
-        const local = await wx.getFileSystemManager().readFile({
-          filePath: `${wx.env.USER_DATA_PATH}/questions.json`
-        })
-        this.globalData.questions = JSON.parse(local)
-      } else {
-        this.globalData.questions = res.data
-      }
+      const fs = wx.getFileSystemManager()
+      const content = fs.readFileSync(tempFilePath, 'utf-8')
+      const data = JSON.parse(content)
 
-      this.globalData.theoryQuestions = this.globalData.questions.theory || []
-      this.globalData.practicalQuestions = this.globalData.questions.practical || []
-      return this.globalData.questions
+      // 缓存到本地，下次秒开
+      try {
+        fs.writeFileSync(
+          `${wx.env.USER_DATA_PATH}/questions.json`,
+          content,
+          'utf-8'
+        )
+      } catch (e) { /* 缓存非必须 */ }
+
+      this.globalData.questions = data
+      this.globalData.theoryQuestions = data.theory || []
+      this.globalData.practicalQuestions = data.practical || []
+      console.log('题库加载成功', data.theory?.length, '道理论题,', data.practical?.length, '道实操题')
+      return data
     } catch (err) {
-      console.error('题库加载失败', err)
-      return null
+      console.error('云存储题库加载失败', err)
+
+      // 尝试从本地缓存兜底
+      try {
+        const fs = wx.getFileSystemManager()
+        const cached = fs.readFileSync(`${wx.env.USER_DATA_PATH}/questions.json`, 'utf-8')
+        const data = JSON.parse(cached)
+        this.globalData.questions = data
+        this.globalData.theoryQuestions = data.theory || []
+        this.globalData.practicalQuestions = data.practical || []
+        console.log('从本地缓存加载题库成功')
+        return data
+      } catch (e2) {
+        console.error('本地缓存也无效', e2)
+        return null
+      }
     }
   }
 })
