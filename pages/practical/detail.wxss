@@ -68,13 +68,12 @@
 }
 .code-blank {
   display: inline-block;
-  min-width: 80px;
-  max-width: 300px;
-  background: #2d2d2d;
+  min-width: 120px;
+  background: transparent;
   color: #f5c518;
   border: none;
   border-bottom: 2px solid #f5c518;
-  padding: 0 6px;
+  padding: 0 4px;
   font-family: 'Menlo', 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.7;

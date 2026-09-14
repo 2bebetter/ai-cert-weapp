@@ -59,7 +59,7 @@
                     value="{{blankValues[part.id] || ''}}"
                     data-blank-id="{{part.id}}"
                     bindinput="onBlankInput"
-                    placeholder="____"
+                    placeholder=""
                     adjust-position="{{false}}"
                   />
                   <!-- 普通代码 -->
