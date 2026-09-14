@@ -1,12 +1,12 @@
 <view class="page">
   <view class="hero">
     <text class="hero-title">AI Trainer 备考练习</text>
-    <text class="hero-sub">人工智能训练师（三级/四级）职业技能等级认定</text>
+    <text class="hero-sub">人工智能训练师（三级/四级）国家职业技能等级认定</text>
   </view>
 
   <view class="notice-card">
     <text class="notice-title">⚠️ 免责声明</text>
-    <text class="notice-body">本工具为个人备考练习程序，题库参考上海交通大学职业技能认证平台公开资料整理，仅供参考；智能评测基于用户自行提供的第三方 API 密钥，结果仅供参考；所有学习数据仅保存在本地设备。考试报名请关注上海人社官方通知。</text>
+    <text class="notice-body">本工具为个人备考练习程序。题库参考上海交通大学职业技能认证平台（gjzs.sjtu.edu.cn）公开资料整理，对应人社部《人工智能训练师国家职业技能标准》，适用于上海人社组织、上海交通大学评价的职业技能等级认定备考。智能评测基于用户自行提供的第三方 API 密钥，结果仅供参考。所有学习数据仅保存在本地设备。</text>
   </view>
 
   <view class="stats-bar" wx:if="{{stats}}">
