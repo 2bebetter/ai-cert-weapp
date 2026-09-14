@@ -40,14 +40,16 @@ App({
     try {
       wx.showLoading({ title: '加载题库中…', mask: true })
 
-      // 从云存储下载题库
-      const { tempFilePath } = await wx.cloud.downloadFile({
-        fileID: 'cloud://cloud1-d0g57699wf3dd062e.636c-cloud1-d0g57699wf3dd062e-1487644378/questions.json'
+      // 通过云函数从云存储读取题库（比 wx.cloud.downloadFile 更稳定）
+      const res = await wx.cloud.callFunction({
+        name: 'getQuestions'
       })
 
-      const fs = wx.getFileSystemManager()
-      const content = fs.readFileSync(tempFilePath, 'utf-8')
-      const data = JSON.parse(content)
+      const data = res.result
+
+      if (!data || data.error) {
+        throw new Error(data?.error || '云函数返回为空')
+      }
 
       if (!data.theory || !data.theory.length) {
         throw new Error('题库文件格式不正确，缺少 theory 数组')
@@ -55,9 +57,10 @@ App({
 
       // 缓存到本地，下次秒开
       try {
+        const fs = wx.getFileSystemManager()
         fs.writeFileSync(
           `${wx.env.USER_DATA_PATH}/questions.json`,
-          content,
+          JSON.stringify(data),
           'utf-8'
         )
       } catch (e) { /* 缓存非必须 */ }
@@ -73,7 +76,7 @@ App({
       wx.hideLoading()
       return data
     } catch (err) {
-      console.error('❌ 云存储题库加载失败:', err)
+      console.error('❌ 题库加载失败:', err)
 
       // 尝试从本地缓存兜底
       try {
