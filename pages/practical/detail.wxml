@@ -47,7 +47,7 @@
 
       <!-- 代码填空：显示代码模板 + 填空题 -->
       <block wx:if="{{task.type === 'code' && codeLines.length}}">
-        <scroll-view class="code-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+        <scroll-view class="code-scroll" scroll-y scroll-x enhanced show-scrollbar="{{false}}">
           <view class="code-editor">
             <view wx:for="{{codeLines}}" wx:for-item="line" wx:key="index" class="code-line">
               <text class="line-num">{{index + 1}}</text>

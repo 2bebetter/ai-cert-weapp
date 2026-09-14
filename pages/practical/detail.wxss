@@ -43,10 +43,17 @@
   padding: 8px 0;
   margin-bottom: 16px;
 }
-.code-editor { font-family: 'Menlo', 'Courier New', monospace; font-size: 13px; line-height: 1.7; }
+.code-editor {
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  display: inline-block;
+  min-width: 100%;
+}
 .code-line {
   display: flex;
   padding: 0 8px;
+  white-space: nowrap;
 }
 .code-line:hover { background: rgba(255,255,255,0.05); }
 .line-num {
@@ -58,7 +65,7 @@
   flex-shrink: 0;
   user-select: none;
 }
-.line-content { flex: 1; display: flex; flex-wrap: wrap; }
+.line-content { flex: 1; display: flex; flex-wrap: nowrap; white-space: nowrap; }
 .code-text {
   color: #d4d4d4;
   white-space: pre;
