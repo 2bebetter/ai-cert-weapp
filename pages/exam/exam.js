@@ -122,8 +122,10 @@ Page({
     const groups = {}
     questions.forEach((q, i) => {
       const type = q.type || 'judge'
-      if (!groups[type]) groups[type] = { type, indexes: [] }
-      groups[type].indexes.push(i)
+      if (!groups[type]) {
+        groups[type] = { type, indexes: [], counter: 1 }
+      }
+      groups[type].indexes.push({ idx: i, num: groups[type].counter++ })
     })
     return Object.values(groups)
   },

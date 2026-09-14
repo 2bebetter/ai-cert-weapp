@@ -80,17 +80,17 @@
       <view class="exam-navigator" catchtap="">
         <scroll-view scroll-y class="navigator-scroll">
           <view wx:for="{{questionGroups}}" wx:key="type" wx:for-item="group" class="nav-group">
-            <text class="nav-group-title">{{groupLabel(group.type)}}</text>
+            <text class="nav-group-title">{{groupLabel(group.type)}} ({{group.indexes.length}})</text>
             <view class="nav-grid">
               <view
                 wx:for="{{group.indexes}}"
-                wx:key="*this"
+                wx:key="idx"
                 wx:for-item="qi"
-                class="nav-num {{navNumClass(qi)}}"
+                class="nav-num {{navNumClass(qi.idx)}}"
                 bindtap="jumpToQuestion"
-                data-index="{{qi}}"
+                data-index="{{qi.idx}}"
               >
-                <text>{{qi + 1}}</text>
+                <text>{{qi.num}}</text>
               </view>
             </view>
           </view>
