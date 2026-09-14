@@ -272,6 +272,9 @@ Page({
     this.setData({ noteModalVisible: false })
   },
 
+  /** 空操作，仅用于 catchtap 防止事件冒泡 */
+  noop() {},
+
   onNoteInput(e) {
     this.setData({ noteText: e.detail.value })
   },

@@ -92,13 +92,13 @@
   </view>
 
   <!-- 笔记弹窗 -->
-  <view class="overlay {{noteModalVisible ? '' : 'hidden'}}" bindtap="closeNoteModal">
-    <view class="note-modal" catchtap="">
+  <view class="overlay {{noteModalVisible ? '' : 'hidden'}}" catchtap="closeNoteModal">
+    <view class="note-modal" catchtap="noop">
       <text class="note-modal-title">📝 笔记</text>
       <textarea class="note-textarea" value="{{noteText}}" bindinput="onNoteInput" placeholder="记下你的思路、疑问或记忆要点…" maxlength="-1" auto-height></textarea>
       <view class="note-modal-actions">
-        <button class="btn btn-ghost" bindtap="closeNoteModal">取消</button>
-        <button class="btn btn-primary" bindtap="saveNote">保存</button>
+        <button class="btn btn-ghost" catchtap="closeNoteModal">取消</button>
+        <button class="btn btn-primary" catchtap="saveNote">保存</button>
       </view>
     </view>
   </view>
