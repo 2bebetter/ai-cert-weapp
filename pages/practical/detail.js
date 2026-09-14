@@ -1,5 +1,5 @@
-import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../../utils/storage'
-import { CLOUD_FUNCTIONS } from '../../../utils/constants'
+import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
+import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 Page({
   data: {
