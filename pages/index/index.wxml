@@ -26,6 +26,11 @@
     </view>
   </view>
 
+  <view class="loading-wrap" wx:elif="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载题库中…</text>
+  </view>
+
   <view class="entry-grid">
     <navigator url="/pages/theory/theory" class="entry-card" hover-class="entry-card-hover">
       <text class="entry-num">01 · 理论</text>

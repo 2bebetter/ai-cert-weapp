@@ -1,6 +1,20 @@
 <view class="page">
+  <!-- 加载中 -->
+  <view class="loading-wrap" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载题库中…</text>
+  </view>
+
+  <!-- 加载失败 -->
+  <view class="empty-state" wx:elif="{{loadError}}">
+    <text>😵</text>
+    <text>题库加载失败</text>
+    <text class="placeholder">请检查网络或云存储配置</text>
+    <button class="btn btn-primary" bindtap="retry" style="margin-top:16px">重新加载</button>
+  </view>
+
   <!-- 筛选栏 -->
-  <view class="filter-bar">
+  <view class="filter-bar" wx:else>
     <picker mode="selector" range="{{filterTypes}}" bindchange="onFilterTypeChange">
       <view class="filter-btn">
         <text>{{filterTypes[filterTypeIndex]}}</text>
@@ -17,7 +31,7 @@
   </view>
 
   <!-- 题目卡片 -->
-  <scroll-view scroll-y class="question-scroll" wx:if="{{currentQuestion}}">
+  <scroll-view scroll-y class="question-scroll" wx:if="{{currentQuestion && !loading && !loadError}}">
     <view class="card question-card">
       <view class="question-head">
         <text class="tag {{typeTagClass}}">{{typeLabel}}</text>
@@ -46,7 +60,7 @@
         </view>
       </view>
 
-      <!-- 提交按钮（选中选项后显示） -->
+      <!-- 提交按钮 -->
       <button wx:if="{{selectedKeys.length > 0 && !submitted}}" class="btn btn-primary btn-block submit-btn" bindtap="submitAnswer">
         提交答案
       </button>
@@ -66,8 +80,9 @@
   </scroll-view>
 
   <!-- 空状态 -->
-  <view class="empty-state" wx:else>
+  <view class="empty-state" wx:elif="{{!loading && !loadError && !currentQuestion}}">
     <text>📚</text>
     <text>当前筛选没有题目</text>
+    <text class="placeholder" wx:if="{{filterAnswerIndex === 0}}">当前筛选为"有答案的题"，试试切换到"全部理论题"</text>
   </view>
 </view>

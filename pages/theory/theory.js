@@ -6,6 +6,8 @@ import {
 
 Page({
   data: {
+    loading: true,
+    loadError: false,
     filtered: [],
     currentIndex: 0,
     currentQuestion: null,
@@ -27,7 +29,9 @@ Page({
   },
 
   onShow() {
-    // 回到页面时刷新收藏状态
+    if (!this.data.loading && !this.data.currentQuestion && !this.data.loadError) {
+      this.loadQuestions()
+    }
     if (this.data.currentQuestion) {
       this.updateFavoriteStatus()
     }
@@ -35,17 +39,25 @@ Page({
 
   async loadQuestions() {
     const app = getApp()
-    const questions = app.globalData.theoryQuestions
 
+    // 如果还没数据，等 preload 完成
+    let questions = app.globalData.theoryQuestions
     if (!questions || !questions.length) {
-      await app.loadQuestions()
+      const result = await app.loadQuestions()
+      if (!result) {
+        this.setData({ loading: false, loadError: true })
+        return
+      }
+      questions = app.globalData.theoryQuestions
     }
 
-    const all = app.globalData.theoryQuestions || []
+    const all = questions || []
     const filtered = this.applyFilters(all)
     const currentQuestion = filtered[0] || null
 
     this.setData({
+      loading: false,
+      loadError: false,
       filtered,
       currentIndex: 0,
       currentQuestion,
@@ -57,6 +69,11 @@ Page({
     if (currentQuestion) {
       this.updateQuestionMeta(currentQuestion)
     }
+  },
+
+  retry() {
+    this.setData({ loading: true, loadError: false })
+    this.loadQuestions()
   },
 
   applyFilters(questions) {
@@ -155,7 +172,6 @@ Page({
       return
     }
 
-    // 构建反馈
     const text = question.answer.length ? question.answer.join('、') : '尚未回填参考答案'
     this.setData({
       submitted: true,

@@ -3,7 +3,8 @@ App({
     questions: null,
     theoryQuestions: [],
     practicalQuestions: [],
-    examInProgress: false
+    examInProgress: false,
+    cloudReady: false
   },
 
   onLaunch() {
@@ -13,7 +14,11 @@ App({
         env: 'cloud1-d0g57699wf3dd062e',
         traceUser: true
       })
+      this.globalData.cloudReady = true
     }
+
+    // 预加载题库（App 启动后立刻加载）
+    this.loadQuestions()
 
     // 检查版本更新
     const updateManager = wx.getUpdateManager()
@@ -28,11 +33,13 @@ App({
     })
   },
 
-  // 全局题库加载（懒加载，各页面按需调用）
+  // 全局题库加载（首次启动时预加载，各页面按需读取）
   async loadQuestions() {
     if (this.globalData.questions) return this.globalData.questions
 
     try {
+      wx.showLoading({ title: '加载题库中…', mask: true })
+
       // 从云存储下载题库
       const { tempFilePath } = await wx.cloud.downloadFile({
         fileID: 'cloud://cloud1-d0g57699wf3dd062e.636c-cloud1-d0g57699wf3dd062e-1487644378/questions.json'
@@ -41,6 +48,10 @@ App({
       const fs = wx.getFileSystemManager()
       const content = fs.readFileSync(tempFilePath, 'utf-8')
       const data = JSON.parse(content)
+
+      if (!data.theory || !data.theory.length) {
+        throw new Error('题库文件格式不正确，缺少 theory 数组')
+      }
 
       // 缓存到本地，下次秒开
       try {
@@ -54,10 +65,15 @@ App({
       this.globalData.questions = data
       this.globalData.theoryQuestions = data.theory || []
       this.globalData.practicalQuestions = data.practical || []
-      console.log('题库加载成功', data.theory?.length, '道理论题,', data.practical?.length, '道实操题')
+
+      console.log('✅ 题库加载成功',
+        '理论:', data.theory?.length, '道,',
+        '实操:', data.practical?.length, '道')
+
+      wx.hideLoading()
       return data
     } catch (err) {
-      console.error('云存储题库加载失败', err)
+      console.error('❌ 云存储题库加载失败:', err)
 
       // 尝试从本地缓存兜底
       try {
@@ -67,10 +83,12 @@ App({
         this.globalData.questions = data
         this.globalData.theoryQuestions = data.theory || []
         this.globalData.practicalQuestions = data.practical || []
-        console.log('从本地缓存加载题库成功')
+        console.log('✅ 从本地缓存加载题库成功')
+        wx.hideLoading()
         return data
       } catch (e2) {
-        console.error('本地缓存也无效', e2)
+        console.error('❌ 本地缓存也无效')
+        wx.hideLoading()
         return null
       }
     }

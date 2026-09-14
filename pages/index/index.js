@@ -1,8 +1,9 @@
 import { buildTheoryProgress } from '../../utils/domain'
-import { getWrongBook, getTheoryAttempts, getTheorySummaries } from '../../utils/storage'
+import { getWrongBook, getTheoryAttempts } from '../../utils/storage'
 
 Page({
   data: {
+    loading: true,
     stats: null
   },
 
@@ -10,21 +11,25 @@ Page({
     this.loadStats()
   },
 
-  loadStats() {
-    const questions = getApp().globalData.theoryQuestions
+  async loadStats() {
+    const app = getApp()
+    let questions = app.globalData.theoryQuestions
+
     if (!questions || !questions.length) {
-      // 题库未加载，尝试加载
-      this.loadQuestions()
-      return
+      const result = await app.loadQuestions()
+      if (!result) {
+        this.setData({ loading: false })
+        return
+      }
+      questions = app.globalData.theoryQuestions
     }
 
     const attempts = getTheoryAttempts()
-    const summaries = getTheorySummaries()
     const wrongIds = getWrongBook()
-
-    const progress = buildTheoryProgress(questions, attempts, {}, summaries)
+    const progress = buildTheoryProgress(questions, attempts, {}, {})
 
     this.setData({
+      loading: false,
       stats: {
         attempted: progress.attempted,
         total: progress.total,
@@ -32,11 +37,5 @@ Page({
         wrongCount: wrongIds.length
       }
     })
-  },
-
-  async loadQuestions() {
-    const app = getApp()
-    await app.loadQuestions()
-    this.loadStats()
   }
 })
