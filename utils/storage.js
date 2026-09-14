@@ -62,11 +62,11 @@ export function getFavorites() {
 }
 
 export function toggleFavorite(id) {
-  const set = getFavorites()
-  if (set.has(id)) set.delete(id)
-  else set.add(id)
-  set(KEYS.FAVORITES, [...set])
-  return set.has(id)
+  const favSet = getFavorites()
+  if (favSet.has(id)) favSet.delete(id)
+  else favSet.add(id)
+  set(KEYS.FAVORITES, [...favSet])
+  return favSet.has(id)
 }
 
 // ---- 作答记录 ----
