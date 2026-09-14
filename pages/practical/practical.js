@@ -28,12 +28,13 @@ Page({
 
     // 从 practicalQuestions 构建任务列表
     const tasks = (questions || []).map((q) => {
-      const title = (q.title || q.question || '未命名任务').split('：')[0].trim()
-      const type = q.score_items && q.score_items.length ? 'code' : 'document'
+      const title = (q.title || q.question?.split('：')[0] || '未命名任务').trim()
+      const hasScoreItems = q.score_items && q.score_items.length > 0
+      const isCode = q.type === 'code_practice' || hasScoreItems
       return {
         id: q.id,
         title,
-        type,
+        type: isCode ? 'code' : 'document',
         question: q.question,
         scoreItems: q.score_items || [],
         versions: q.source_variant ? [{ year: q.source_year, code: q.source_code }] : []

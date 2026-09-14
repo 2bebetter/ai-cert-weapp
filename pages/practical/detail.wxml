@@ -5,6 +5,15 @@
     <text class="loading-text">加载中…</text>
   </view>
 
+  <!-- 加载失败 -->
+  <view class="empty-state" wx:elif="{{loadError}}">
+    <text>😵</text>
+    <text>题库加载失败</text>
+    <text class="placeholder" wx:if="{{debugInfo}}">{{debugInfo}}</text>
+    <text class="placeholder" wx:else>请确认 getQuestions 云函数已部署</text>
+    <button class="btn btn-primary" bindtap="retry" style="margin-top:16px">重试</button>
+  </view>
+
   <block wx:else>
     <view class="task-header">
       <text class="tag {{task.type === 'code' ? '' : 'tag-warning'}}">{{task.type === 'code' ? '代码填空' : '文档作答'}}</text>
