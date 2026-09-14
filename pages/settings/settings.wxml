@@ -1,0 +1,48 @@
+<view class="page">
+  <!-- AI 配置 -->
+  <view class="section">
+    <text class="section-title">AI 判题配置</text>
+    <text class="section-desc">自行提供 API Key，数据仅保存在本机。支持任何 OpenAI 兼容接口。</text>
+
+    <view class="field">
+      <text class="field-label">API 地址</text>
+      <input class="field-input" value="{{baseUrl}}" bindinput="onBaseUrlInput" placeholder="https://api.deepseek.com/v1" />
+    </view>
+
+    <view class="field">
+      <text class="field-label">API Key</text>
+      <input class="field-input" value="{{apiKey}}" type="password" bindinput="onApiKeyInput" placeholder="sk-..." password="{{true}}" />
+    </view>
+
+    <view class="field">
+      <text class="field-label">模型名称</text>
+      <input class="field-input" value="{{model}}" bindinput="onModelInput" placeholder="deepseek-chat" />
+    </view>
+
+    <view class="settings-actions">
+      <button class="btn btn-secondary" bindtap="testConnection">测试连接</button>
+      <button class="btn btn-primary" bindtap="saveConfig">保存配置</button>
+    </view>
+
+    <text wx:if="{{testResult}}" class="test-result {{testResult.ok ? 'ok' : 'bad'}}">
+      {{testResult.msg}}
+    </text>
+  </view>
+
+  <!-- 数据管理 -->
+  <view class="section">
+    <text class="section-title">数据管理</text>
+
+    <button class="btn btn-secondary btn-block" bindtap="exportData">导出学习数据</button>
+    <button class="btn btn-secondary btn-block" bindtap="importData">导入学习数据</button>
+    <button class="btn btn-danger btn-block" bindtap="clearData">清除所有数据</button>
+  </view>
+
+  <!-- 关于 -->
+  <view class="section about-section">
+    <text class="about-title">AI Trainer 备考练习</text>
+    <text class="about-version">v1.0.0</text>
+    <text class="about-desc">上海人社人工智能训练师三级/四级备考刷题工具。</text>
+    <text class="about-desc">本工具仅为考生备考练习，非人社官方系统。</text>
+  </view>
+</view>

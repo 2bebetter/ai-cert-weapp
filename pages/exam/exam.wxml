@@ -1,0 +1,110 @@
+<view class="page">
+  <!-- 考试未开始 → 介绍页 -->
+  <view wx:if="{{!examStarted}}" class="intro">
+    <view class="intro-card">
+      <text class="intro-icon">📝</text>
+      <text class="intro-title">理论模拟考试</text>
+      <view class="intro-detail">
+        <view class="intro-row"><text>判断题</text><text>40 题</text></view>
+        <view class="intro-row"><text>单选题</text><text>140 题</text></view>
+        <view class="intro-row"><text>多选题</text><text>10 题</text></view>
+        <view class="intro-row total"><text>总计 190 题</text><text>限时 90 分钟</text></view>
+      </view>
+      <button class="btn btn-primary btn-block" bindtap="startExam">开始考试</button>
+    </view>
+
+    <view class="history-card" wx:if="{{examHistory.length}}">
+      <text class="history-title">考试记录</text>
+      <view wx:for="{{examHistory}}" wx:key="id" class="history-row">
+        <text class="history-date">{{item.date}}</text>
+        <text class="history-score">{{item.score}} / {{item.maxScore}}</text>
+        <text class="history-acc">{{item.accuracy}}%</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 考试进行中 -->
+  <view wx:else class="exam-page">
+    <!-- 顶部状态 -->
+    <view class="exam-topbar">
+      <view class="exam-progress">
+        <text>{{currentIndex + 1}} / {{questions.length}}</text>
+      </view>
+      <view class="exam-timer {{timerUrgent ? 'urgent' : ''}}">
+        <text>{{timerDisplay}}</text>
+      </view>
+      <button class="btn-ghost btn-sm" bindtap="toggleMark">
+        {{isMarked ? '★' : '☆'}}
+      </button>
+    </view>
+
+    <!-- 题目区 -->
+    <scroll-view scroll-y class="exam-scroll">
+      <view class="card">
+        <view class="question-head">
+          <text class="tag">{{typeLabel}}</text>
+        </view>
+        <text class="question-text">{{currentQuestion.question}}</text>
+
+        <view class="options">
+          <view
+            wx:for="{{currentQuestion.options}}"
+            wx:key="key"
+            class="option {{optionClass(item.key)}}"
+            bindtap="selectOption"
+            data-key="{{item.key}}"
+          >
+            <radio wx:if="{{currentQuestion.type === 'single' || currentQuestion.type === 'judge'}}"
+              checked="{{answerKeys.indexOf(item.key) > -1}}" color="#007aff" />
+            <checkbox wx:elif="{{currentQuestion.type === 'multiple'}}"
+              checked="{{answerKeys.indexOf(item.key) > -1}}" color="#007aff" />
+            <text>{{item.key}}. {{item.value}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="exam-nav">
+        <button class="btn btn-ghost" bindtap="prevQuestion" disabled="{{currentIndex <= 0}}">上一题</button>
+        <button class="btn btn-secondary" bindtap="saveProgress">保存进度</button>
+        <button class="btn btn-primary" bindtap="nextQuestion" disabled="{{currentIndex >= questions.length - 1}}">下一题</button>
+      </view>
+    </scroll-view>
+
+    <!-- 题号导航（悬浮按钮） -->
+    <view class="exam-nav-btn" bindtap="toggleNavigator">
+      <text>📋</text>
+    </view>
+
+    <!-- 题号面板 -->
+    <view class="exam-overlay {{navigatorOpen ? '' : 'hidden'}}" bindtap="toggleNavigator">
+      <view class="exam-navigator" catchtap="">
+        <scroll-view scroll-y class="navigator-scroll">
+          <view wx:for="{{questionGroups}}" wx:key="type" class="nav-group">
+            <text class="nav-group-title">{{groupLabel(item.type)}}</text>
+            <view class="nav-grid">
+              <view
+                wx:for="{{item.indexes}}"
+                wx:key="*this"
+                class="nav-num {{navNumClass(item.index)}}"
+                bindtap="jumpToQuestion"
+                data-index="{{item.index}}"
+              >
+                <text>{{item.index + 1}}</text>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+        <button class="btn btn-danger btn-block" bindtap="confirmSubmit">交卷</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 考试结果 -->
+  <view wx:if="{{examFinished}}" class="result-page">
+    <!-- 结果展示，后续完善 -->
+    <view class="empty-state">
+      <text>🎉</text>
+      <text>考试完成！得分：{{examResult.score}} / {{examResult.maxScore}}</text>
+    </view>
+  </view>
+</view>

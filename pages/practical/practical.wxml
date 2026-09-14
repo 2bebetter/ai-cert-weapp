@@ -1,0 +1,54 @@
+<view class="page">
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <picker mode="selector" range="{{taskStatuses}}" bindchange="onStatusFilter">
+      <view class="filter-btn">
+        <text>{{taskStatuses[statusIndex]}}</text>
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+    <picker mode="selector" range="{{taskTypes}}" bindchange="onTypeFilter">
+      <view class="filter-btn">
+        <text>{{taskTypes[typeIndex]}}</text>
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+    <text class="filter-info">{{tasks.length}} 项</text>
+  </view>
+
+  <!-- 进度概览 -->
+  <view class="progress-mini" wx:if="{{progress}}">
+    <view class="progress-item"><text class="num">{{progress.practiced}}</text><text>已练习</text></view>
+    <view class="progress-item"><text class="num">{{progress.inProgress}}</text><text>进行中</text></view>
+    <view class="progress-item"><text class="num">{{progress.unattempted}}</text><text>未开始</text></view>
+  </view>
+
+  <!-- 任务列表 -->
+  <scroll-view scroll-y class="task-scroll" wx:if="{{tasks.length}}">
+    <view
+      wx:for="{{tasks}}"
+      wx:key="canonicalId"
+      class="task-card"
+      bindtap="openTask"
+      data-task="{{item.canonicalId}}"
+      hover-class="task-card-hover"
+    >
+      <text class="task-title">{{item.title}}</text>
+      <view class="task-meta">
+        <text class="task-type {{item.type === 'code' ? 'tag' : 'tag tag-warning'}}">
+          {{item.type === 'code' ? '代码填空' : '文档作答'}}
+        </text>
+        <text class="task-versions">{{item.versions.length}} 个版本</text>
+        <text class="task-status {{item.progressStatus}}">
+          {{item.progressLabel}}
+        </text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:else>
+    <text>🔧</text>
+    <text>暂无符合条件的实操任务</text>
+  </view>
+</view>

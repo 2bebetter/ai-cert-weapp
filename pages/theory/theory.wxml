@@ -1,0 +1,73 @@
+<view class="page">
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <picker mode="selector" range="{{filterTypes}}" bindchange="onFilterTypeChange">
+      <view class="filter-btn">
+        <text>{{filterTypes[filterTypeIndex]}}</text>
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+    <picker mode="selector" range="{{filterAnswers}}" bindchange="onFilterAnswerChange">
+      <view class="filter-btn">
+        <text>{{filterAnswers[filterAnswerIndex]}}</text>
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+    <view class="filter-info">{{currentIndex + 1}} / {{filtered.length}}</view>
+  </view>
+
+  <!-- 题目卡片 -->
+  <scroll-view scroll-y class="question-scroll" wx:if="{{currentQuestion}}">
+    <view class="card question-card">
+      <view class="question-head">
+        <text class="tag {{typeTagClass}}">{{typeLabel}}</text>
+        <text class="question-level">{{currentQuestion.level}}</text>
+        <button class="btn-ghost btn-sm favorite-btn" bindtap="toggleFavorite">
+          {{isFavorited ? '★' : '☆'}}
+        </button>
+      </view>
+
+      <text class="question-text">{{currentQuestion.question}}</text>
+
+      <view class="options" wx:if="{{currentQuestion.options}}">
+        <view
+          wx:for="{{currentQuestion.options}}"
+          wx:key="key"
+          class="option {{optionClass(item.key)}}"
+          bindtap="onSelectOption"
+          data-key="{{item.key}}"
+          data-type="{{currentQuestion.type}}"
+        >
+          <radio wx:if="{{currentQuestion.type === 'single' || currentQuestion.type === 'judge'}}"
+            checked="{{selectedKeys.indexOf(item.key) > -1}}" color="#007aff" />
+          <checkbox wx:elif="{{currentQuestion.type === 'multiple'}}"
+            checked="{{selectedKeys.indexOf(item.key) > -1}}" color="#007aff" />
+          <text>{{item.key}}. {{item.value}}</text>
+        </view>
+      </view>
+
+      <!-- 提交按钮（选中选项后显示） -->
+      <button wx:if="{{selectedKeys.length > 0 && !submitted}}" class="btn btn-primary btn-block submit-btn" bindtap="submitAnswer">
+        提交答案
+      </button>
+
+      <!-- 反馈 -->
+      <view wx:if="{{feedback}}" class="feedback {{feedback.class}}">
+        <text class="feedback-title">{{feedback.title}}</text>
+        <text class="feedback-body">{{feedback.body}}</text>
+      </view>
+    </view>
+
+    <!-- 导航 -->
+    <view class="nav-bar">
+      <button class="btn btn-ghost" bindtap="prevQuestion" disabled="{{currentIndex <= 0}}">← 上一题</button>
+      <button class="btn btn-ghost" bindtap="nextQuestion" disabled="{{currentIndex >= filtered.length - 1}}">下一题 →</button>
+    </view>
+  </scroll-view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:else>
+    <text>📚</text>
+    <text>当前筛选没有题目</text>
+  </view>
+</view>

@@ -1,0 +1,53 @@
+<view class="page">
+  <view class="hero">
+    <text class="hero-title">AI Trainer 备考练习</text>
+    <text class="hero-sub">上海人社人工智能训练师三级/四级</text>
+  </view>
+
+  <view class="notice-card">
+    <text class="notice-title">⚠️ 免责声明</text>
+    <text class="notice-body">本工具仅为考生备考练习，不是人社官方系统；题目为公开参考题库，不等于真实考试原题，请以上海人社官方考核为准。</text>
+  </view>
+
+  <view class="stats-bar" wx:if="{{stats}}">
+    <view class="stat-item">
+      <text class="stat-num">{{stats.attempted}}<text class="stat-denom">/{{stats.total}}</text></text>
+      <text class="stat-label">已刷理论题</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-num">{{stats.accuracy}}%</text>
+      <text class="stat-label">正确率</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-num">{{stats.wrongCount}}</text>
+      <text class="stat-label">错题数</text>
+    </view>
+  </view>
+
+  <view class="entry-grid">
+    <navigator url="/pages/theory/theory" class="entry-card" hover-class="entry-card-hover">
+      <text class="entry-num">01 · 理论</text>
+      <text class="entry-title">理论学习</text>
+      <text class="entry-desc">单题练习、错题本、模拟考试和统计</text>
+    </navigator>
+
+    <navigator url="/pages/practical/practical" class="entry-card" hover-class="entry-card-hover">
+      <text class="entry-num">02 · 实操</text>
+      <text class="entry-title">实操学习</text>
+      <text class="entry-desc">代码填空和文档作答练习</text>
+    </navigator>
+  </view>
+
+  <navigator url="/pages/exam/exam" class="exam-entry" hover-class="entry-card-hover">
+    <text class="exam-entry-label">📝 模拟考试</text>
+    <text class="exam-entry-desc">判断题40 + 单选题140 + 多选题10 · 限时90分钟</text>
+    <text class="exam-entry-arrow">›</text>
+  </navigator>
+
+  <view class="footer-links">
+    <navigator url="/pages/review/review" class="footer-link">📕 错题本与复习</navigator>
+    <navigator url="/pages/settings/settings" class="footer-link">⚙️ 设置与 AI 配置</navigator>
+  </view>
+</view>

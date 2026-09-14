@@ -1,0 +1,43 @@
+<view class="page">
+  <!-- 筛选 Tab -->
+  <view class="review-tabs">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      class="review-tab {{activeTab === item.key ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-key="{{item.key}}"
+    >
+      <text>{{item.label}}</text>
+      <text class="tab-count">{{item.count}}</text>
+    </view>
+  </view>
+
+  <!-- 题目列表 -->
+  <scroll-view scroll-y class="review-scroll" wx:if="{{reviewList.length}}">
+    <view
+      wx:for="{{reviewList}}"
+      wx:key="id"
+      class="review-card"
+      bindtap="openQuestion"
+      data-id="{{item.id}}"
+      hover-class="review-card-hover"
+    >
+      <view class="review-top">
+        <text class="tag {{item.typeClass}}">{{item.typeLabel}}</text>
+        <text class="review-note-count" wx:if="{{item.hasNote}}">📝</text>
+      </view>
+      <text class="review-text ellipsis-2">{{item.text}}</text>
+      <view class="review-actions">
+        <text class="review-status {{item.statusClass}}">{{item.statusLabel}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:else>
+    <text>🎉</text>
+    <text>当前分类下暂无题目</text>
+    <text class="placeholder">完成刷题后会在这里生成复习题目</text>
+  </view>
+</view>

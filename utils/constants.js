@@ -1,0 +1,51 @@
+/** 题型映射 */
+export const QUESTION_TYPES = {
+  judge: { label: '判断题', short: '判断' },
+  single: { label: '单选题', short: '单选' },
+  multiple: { label: '多选题', short: '多选' }
+}
+
+/** 答案信任度等级 */
+export const ANSWER_STATUS = {
+  verified: { label: '高可信已回填', color: 'tag-success' },
+  manual: { label: '人工审核确认', color: 'tag-success' },
+  review: { label: '低置信度待复核', color: 'tag-warning' },
+  unverified: { label: '尚未回填参考答案', color: 'tag-danger' }
+}
+
+/** 模拟考试配比 */
+export const EXAM_QUOTAS = { judge: 40, single: 140, multiple: 10 }
+export const EXAM_DURATION = 90 * 60 * 1000 // 90 分钟
+
+/** 实操任务类型 */
+export const TASK_TYPES = {
+  code: { label: '代码填空' },
+  document: { label: '文档作答' }
+}
+
+/** 实操进度状态 */
+export const TASK_STATUSES = [
+  { value: 'all', label: '全部' },
+  { value: 'unattempted', label: '未开始' },
+  { value: 'inProgress', label: '草稿' },
+  { value: 'practiced', label: '已练习' },
+  { value: 'needsReview', label: '待复盘' }
+]
+
+/** 默认 AI 判题配置 */
+export const DEFAULT_AI_CONFIG = {
+  baseUrl: 'https://api.deepseek.com/v1',
+  model: 'deepseek-chat',
+  apiKey: ''
+}
+
+/** 云函数名称 */
+export const CLOUD_FUNCTIONS = {
+  AI_GRADE: 'aiGrade'
+}
+
+/** 本地存储 key */
+export const STORAGE_KEYS = {
+  AI_CONFIG: 'ai_cert_ai_config',
+  EXAM_IN_PROGRESS: 'ai_cert_exam_in_progress'
+}

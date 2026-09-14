@@ -1,0 +1,73 @@
+.page { min-height: 100vh; }
+
+.review-tabs {
+  display: flex;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.review-tab {
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  font-size: 13px;
+  color: var(--text-3);
+  position: relative;
+}
+.review-tab.active {
+  color: var(--primary);
+  font-weight: 500;
+}
+.review-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 1px;
+}
+.tab-count {
+  margin-left: 4px;
+  font-size: 11px;
+  background: var(--bg);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+.review-tab.active .tab-count {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.review-scroll { padding: 0 0 16px; }
+
+.review-card {
+  background: var(--card-bg);
+  margin: 6px 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+.review-card-hover { opacity: 0.8; }
+.review-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.review-note-count { font-size: 14px; }
+.review-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-2);
+  display: block;
+  margin-bottom: 8px;
+}
+.review-actions { display: flex; align-items: center; }
+.review-status { font-size: 11px; }
+.review-status.wrong { color: var(--danger); }
+.review-status.correct { color: var(--success); }
+.review-status.unattempted { color: var(--text-4); }
