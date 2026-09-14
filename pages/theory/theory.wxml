@@ -43,19 +43,19 @@
 
       <text class="question-text">{{currentQuestion.question}}</text>
 
-      <view class="options" wx:if="{{currentQuestion.options}}">
+      <view class="options" wx:if="{{renderOptions.length}}">
         <view
-          wx:for="{{currentQuestion.options}}"
+          wx:for="{{renderOptions}}"
           wx:key="key"
-          class="option {{optionClass(item.key)}}"
+          class="option {{item.cls}}"
           bindtap="onSelectOption"
           data-key="{{item.key}}"
           data-type="{{currentQuestion.type}}"
         >
           <radio wx:if="{{currentQuestion.type === 'single' || currentQuestion.type === 'judge'}}"
-            checked="{{selectedKeys.indexOf(item.key) > -1}}" color="#007aff" />
+            checked="{{item.checked}}" color="#007aff" />
           <checkbox wx:elif="{{currentQuestion.type === 'multiple'}}"
-            checked="{{selectedKeys.indexOf(item.key) > -1}}" color="#007aff" />
+            checked="{{item.checked}}" color="#007aff" />
           <text class="option-label">{{item.key}}. {{item.value}}</text>
         </view>
       </view>

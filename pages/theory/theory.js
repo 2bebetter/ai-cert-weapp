@@ -11,6 +11,7 @@ Page({
     filtered: [],
     currentIndex: 0,
     currentQuestion: null,
+    renderOptions: [],   // [{ key, value, checked, cls }]
     selectedKeys: [],
     submitted: false,
     feedback: null,
@@ -40,7 +41,6 @@ Page({
   async loadQuestions() {
     const app = getApp()
 
-    // 如果还没数据，等 preload 完成
     let questions = app.globalData.theoryQuestions
     if (!questions || !questions.length) {
       const result = await app.loadQuestions()
@@ -63,7 +63,9 @@ Page({
       currentQuestion,
       selectedKeys: [],
       submitted: false,
-      feedback: null
+      feedback: null,
+      renderOptions: currentQuestion
+        ? this.buildRenderOptions(currentQuestion, [], false) : []
     })
 
     if (currentQuestion) {
@@ -78,16 +80,11 @@ Page({
 
   applyFilters(questions) {
     let result = [...questions]
-
-    // 题型筛选
     if (this.data.filterTypeIndex === 1) result = result.filter((q) => q.type === 'judge')
     else if (this.data.filterTypeIndex === 2) result = result.filter((q) => q.type === 'single')
     else if (this.data.filterTypeIndex === 3) result = result.filter((q) => q.type === 'multiple')
-
-    // 答案筛选
     if (this.data.filterAnswerIndex === 0) result = result.filter((q) => q.answer && q.answer.length)
     else if (this.data.filterAnswerIndex === 2) result = result.filter((q) => ['verified', 'manual'].includes(q.answer_status))
-
     return result
   },
 
@@ -111,9 +108,33 @@ Page({
       currentQuestion,
       selectedKeys: [],
       submitted: false,
-      feedback: null
+      feedback: null,
+      renderOptions: currentQuestion
+        ? this.buildRenderOptions(currentQuestion, [], false) : []
     })
     if (currentQuestion) this.updateQuestionMeta(currentQuestion)
+  },
+
+  /** 核心：把选项渲染信息全部预计算进 data */
+  buildRenderOptions(question, selectedKeys, submitted) {
+    if (!question || !question.options) return []
+    return question.options.map((opt) => {
+      const isSelected = selectedKeys.includes(opt.key)
+      let cls = ''
+      if (!submitted) {
+        cls = isSelected ? 'selected' : ''
+      } else {
+        const isCorrect = question.answer && question.answer.includes(opt.key)
+        if (isCorrect) cls = 'correct'
+        else if (isSelected && !isCorrect) cls = 'wrong'
+      }
+      return {
+        key: opt.key,
+        value: opt.value,
+        checked: isSelected,
+        cls
+      }
+    })
   },
 
   updateQuestionMeta(question) {
@@ -135,27 +156,19 @@ Page({
     if (this.data.submitted) return
 
     const { key, type } = e.currentTarget.dataset
+    let selectedKeys
 
     if (type === 'single' || type === 'judge') {
-      this.setData({ selectedKeys: [key] })
-    } else if (type === 'multiple') {
-      let keys = [...this.data.selectedKeys]
-      const idx = keys.indexOf(key)
-      if (idx >= 0) keys.splice(idx, 1)
-      else keys.push(key)
-      this.setData({ selectedKeys: keys })
+      selectedKeys = [key]
+    } else {
+      selectedKeys = [...this.data.selectedKeys]
+      const idx = selectedKeys.indexOf(key)
+      if (idx >= 0) selectedKeys.splice(idx, 1)
+      else selectedKeys.push(key)
     }
-  },
 
-  optionClass(key) {
-    const isSelected = this.data.selectedKeys.includes(key)
-    if (!this.data.submitted) return isSelected ? 'selected' : ''
-    const q = this.data.currentQuestion
-    if (!q) return ''
-    const isCorrect = q.answer.includes(key)
-    if (isCorrect) return 'correct'
-    if (isSelected && !isCorrect) return 'wrong'
-    return ''
+    const renderOptions = this.buildRenderOptions(this.data.currentQuestion, selectedKeys, false)
+    this.setData({ selectedKeys, renderOptions })
   },
 
   submitAnswer() {
@@ -168,7 +181,8 @@ Page({
     if (!question.answer.length || question.answer_status === 'unverified' || confidence === 0) {
       this.setData({
         submitted: true,
-        feedback: { class: 'warn', title: '答案待核对', body: '该题没有可验证的参考答案，当前不会判定对错。' }
+        feedback: { class: 'warn', title: '答案待核对', body: '该题没有可验证的参考答案，当前不会判定对错。' },
+        renderOptions: this.buildRenderOptions(question, this.data.selectedKeys, true)
       })
       return
     }
@@ -180,10 +194,10 @@ Page({
         class: result.correct ? 'ok' : 'bad',
         title: result.correct ? '回答正确' : '回答错误',
         body: `正确答案：${text}\n${question.analysis || ''}${confidence < 90 ? '\n仅供参考，请自行核对' : ''}`
-      }
+      },
+      renderOptions: this.buildRenderOptions(question, this.data.selectedKeys, true)
     })
 
-    // 记录作答
     addTheoryAttempt({
       id: `${question.id}_${Date.now()}`,
       questionId: String(question.id),
@@ -211,7 +225,8 @@ Page({
       currentQuestion: q,
       selectedKeys: [],
       submitted: false,
-      feedback: null
+      feedback: null,
+      renderOptions: q ? this.buildRenderOptions(q, [], false) : []
     })
     this.updateQuestionMeta(q)
   },
@@ -225,7 +240,8 @@ Page({
       currentQuestion: q,
       selectedKeys: [],
       submitted: false,
-      feedback: null
+      feedback: null,
+      renderOptions: q ? this.buildRenderOptions(q, [], false) : []
     })
     this.updateQuestionMeta(q)
   }

@@ -48,16 +48,16 @@
 
         <view class="options">
           <view
-            wx:for="{{currentQuestion.options}}"
+            wx:for="{{renderOptions}}"
             wx:key="key"
-            class="option {{optionClass(item.key)}}"
+            class="option {{item.cls}}"
             bindtap="selectOption"
             data-key="{{item.key}}"
           >
             <radio wx:if="{{currentQuestion.type === 'single' || currentQuestion.type === 'judge'}}"
-              checked="{{answerKeys.indexOf(item.key) > -1}}" color="#007aff" />
+              checked="{{item.checked}}" color="#007aff" />
             <checkbox wx:elif="{{currentQuestion.type === 'multiple'}}"
-              checked="{{answerKeys.indexOf(item.key) > -1}}" color="#007aff" />
+              checked="{{item.checked}}" color="#007aff" />
             <text>{{item.key}}. {{item.value}}</text>
           </view>
         </view>

@@ -19,6 +19,7 @@ Page({
     navigatorOpen: false,
     questionGroups: [],
     answerKeys: [],
+    renderOptions: [], // [{ key, value, checked, cls }]
     examResult: null,
     endTime: 0,
     timer: null
@@ -80,6 +81,7 @@ Page({
       answers: {},
       marked: new Set(),
       answerKeys: [],
+      renderOptions: this.buildRenderOptions(examQuestions[0], []),
       endTime,
       timerDisplay: this.formatTime(EXAM_DURATION),
       timerUrgent: false,
@@ -146,14 +148,26 @@ Page({
     }
 
     this.setData({ answers, answerKeys: answers[q.id] || [] })
+    this.syncRenderOptions()
     this.saveExamState()
   },
 
-  optionClass(key) {
+  buildRenderOptions(question, answerKeys) {
+    if (!question || !question.options) return []
+    return question.options.map((opt) => ({
+      key: opt.key,
+      value: opt.value,
+      checked: answerKeys.includes(opt.key),
+      cls: answerKeys.includes(opt.key) ? 'selected' : ''
+    }))
+  },
+
+  syncRenderOptions() {
     const q = this.data.currentQuestion
-    if (!q) return ''
-    const keys = this.data.answers[q.id] || []
-    return keys.indexOf(key) >= 0 ? 'selected' : ''
+    const keys = this.data.answers[q?.id] || []
+    this.setData({
+      renderOptions: this.buildRenderOptions(q, keys)
+    })
   },
 
   toggleMark() {
@@ -168,10 +182,12 @@ Page({
     if (this.data.currentIndex <= 0) return
     const idx = this.data.currentIndex - 1
     const q = this.data.questions[idx]
+    const answerKeys = this.data.answers[q.id] || []
     this.setData({
       currentIndex: idx,
       currentQuestion: q,
-      answerKeys: this.data.answers[q.id] || [],
+      answerKeys,
+      renderOptions: this.buildRenderOptions(q, answerKeys),
       isMarked: this.data.marked.has(q.id),
       typeLabel: getTypeLabel(q.type)
     })
@@ -181,10 +197,12 @@ Page({
     if (this.data.currentIndex >= this.data.questions.length - 1) return
     const idx = this.data.currentIndex + 1
     const q = this.data.questions[idx]
+    const answerKeys = this.data.answers[q.id] || []
     this.setData({
       currentIndex: idx,
       currentQuestion: q,
-      answerKeys: this.data.answers[q.id] || [],
+      answerKeys,
+      renderOptions: this.buildRenderOptions(q, answerKeys),
       isMarked: this.data.marked.has(q.id),
       typeLabel: getTypeLabel(q.type)
     })
@@ -203,10 +221,12 @@ Page({
   jumpToQuestion(e) {
     const idx = Number(e.currentTarget.dataset.index)
     const q = this.data.questions[idx]
+    const answerKeys = this.data.answers[q.id] || []
     this.setData({
       currentIndex: idx,
       currentQuestion: q,
-      answerKeys: this.data.answers[q.id] || [],
+      answerKeys,
+      renderOptions: this.buildRenderOptions(q, answerKeys),
       isMarked: this.data.marked.has(q.id),
       typeLabel: getTypeLabel(q.type),
       navigatorOpen: false
