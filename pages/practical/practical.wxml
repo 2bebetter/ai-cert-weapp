@@ -42,8 +42,8 @@
       >
         <text class="task-title">{{item.title}}</text>
         <view class="task-meta">
-          <text class="task-type {{item.type === 'code' ? 'tag' : 'tag tag-warning'}}">
-            {{item.type === 'code' ? '代码填空' : '文档作答'}}
+          <text class="task-type {{item.type === 'code' ? 'tag' : (item.type === 'mixed' ? 'tag tag-purple' : 'tag tag-warning')}}">
+            {{item.type === 'code' ? '代码填空' : (item.type === 'mixed' ? '混合题' : '文档作答')}}
           </text>
           <text class="task-status unattempted">未开始</text>
         </view>

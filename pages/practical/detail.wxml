@@ -45,46 +45,84 @@
     <view class="answer-section">
       <text class="section-title">作答区</text>
 
-      <!-- 代码填空：显示代码模板 + 填空题 -->
-      <block wx:if="{{task.type === 'code' && codeLines.length}}">
-        <scroll-view class="code-scroll" scroll-y scroll-x enhanced show-scrollbar="{{true}}">
-          <view class="code-editor">
-            <view wx:for="{{codeLines}}" wx:for-item="line" wx:key="index" class="code-line">
-              <text class="line-num">{{index + 1}}</text>
-              <view class="line-content">
-                <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
-                  <!-- 留空区 -->
-                  <input wx:if="{{part.kind === 'blank'}}"
-                    class="code-blank"
-                    value="{{blankValues[part.id] || ''}}"
-                    data-blank-id="{{part.id}}"
-                    bindinput="onBlankInput"
-                    placeholder=""
-                    adjust-position="{{false}}"
-                  />
-                  <!-- 普通代码 -->
-                  <text wx:else class="code-text">{{part.value}}</text>
-                </block>
+      <!-- 混合题：先代码，后文档 -->
+      <block wx:if="{{task.type === 'mixed'}}">
+        <text class="sub-section-title">📝 代码部分</text>
+        <block wx:if="{{codeLines.length}}">
+          <scroll-view class="code-scroll" scroll-y scroll-x enhanced show-scrollbar="{{true}}">
+            <view class="code-editor">
+              <view wx:for="{{codeLines}}" wx:for-item="line" wx:key="index" class="code-line">
+                <text class="line-num">{{index + 1}}</text>
+                <view class="line-content">
+                  <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
+                    <input wx:if="{{part.kind === 'blank'}}"
+                      class="code-blank"
+                      value="{{blankValues[part.id] || ''}}"
+                      data-blank-id="{{part.id}}"
+                      bindinput="onBlankInput"
+                      placeholder=""
+                      adjust-position="{{false}}"
+                    />
+                    <text wx:else class="code-text">{{part.value}}</text>
+                  </block>
+                </view>
               </view>
             </view>
-          </view>
-        </scroll-view>
-      </block>
+          </scroll-view>
+        </block>
+        <block wx:else>
+          <view class="no-template-tip">代码模板加载中，请先填写下方文档部分</view>
+        </block>
 
-      <!-- 代码填空（兜底：无模板时用纯文本框） -->
-      <block wx:elif="{{task.type === 'code'}}">
-        <view class="no-template-tip">等待代码模板加载，你可以先在这里写代码</view>
+        <text class="sub-section-title" style="margin-top:16px">📄 文档作答部分</text>
         <textarea
-          class="code-area"
-          value="{{answer}}"
+          class="doc-area"
+          value="{{docAnswer}}"
           bindinput="onAnswerInput"
-          placeholder="在此写代码…import pandas as pd"
+          placeholder="在此填写文档/分析内容…"
           maxlength="-1"
           auto-height
         ></textarea>
       </block>
 
-      <!-- 文档作答 -->
+      <!-- 纯代码题 -->
+      <block wx:elif="{{task.type === 'code'}}">
+        <block wx:if="{{codeLines.length}}">
+          <scroll-view class="code-scroll" scroll-y scroll-x enhanced show-scrollbar="{{true}}">
+            <view class="code-editor">
+              <view wx:for="{{codeLines}}" wx:for-item="line" wx:key="index" class="code-line">
+                <text class="line-num">{{index + 1}}</text>
+                <view class="line-content">
+                  <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
+                    <input wx:if="{{part.kind === 'blank'}}"
+                      class="code-blank"
+                      value="{{blankValues[part.id] || ''}}"
+                      data-blank-id="{{part.id}}"
+                      bindinput="onBlankInput"
+                      placeholder=""
+                      adjust-position="{{false}}"
+                    />
+                    <text wx:else class="code-text">{{part.value}}</text>
+                  </block>
+                </view>
+              </view>
+            </view>
+          </scroll-view>
+        </block>
+        <block wx:else>
+          <view class="no-template-tip">等待代码模板加载，你可以先在这里写代码</view>
+          <textarea
+            class="code-area"
+            value="{{answer}}"
+            bindinput="onAnswerInput"
+            placeholder="在此写代码…import pandas as pd"
+            maxlength="-1"
+            auto-height
+          ></textarea>
+        </block>
+      </block>
+
+      <!-- 纯文档题 -->
       <block wx:else>
         <textarea
           class="doc-area"

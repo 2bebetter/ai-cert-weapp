@@ -1,4 +1,5 @@
 import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
+import { practicalTaskType } from '../../utils/domain'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 Page({
@@ -6,7 +7,8 @@ Page({
     loading: true,
     loadError: false,
     task: null,
-    answer: '',
+    answer: '',           // 文档作答
+    docAnswer: '',        // 混合题的文档部分
     // 代码填空
     codeLines: [],
     blankValues: {},
@@ -54,18 +56,18 @@ Page({
       return
     }
 
+    // 判定题型：code / document / mixed
+    const type = practicalTaskType(q)
+    const hasTemplate = q.type === 'code_practice' || type === 'code' || type === 'mixed'
+
     // 加载代码模板
-    if (!this.templates && q.type === 'code_practice') {
+    if (!this.templates && hasTemplate) {
       try {
         this.templates = await this.loadTemplates()
       } catch (err) {
         console.warn('代码模板加载失败:', err.message)
       }
     }
-
-    const hasScoreItems = q.score_items && q.score_items.length > 0
-    const isCode = q.type === 'code_practice' || hasScoreItems
-    const type = isCode ? 'code' : 'document'
 
     const task = {
       id: q.id,
@@ -76,18 +78,21 @@ Page({
       maxScore: q.score_total || (q.score_items || []).reduce((s, i) => s + Number(i.score), 0)
     }
 
-    // 从模板生成代码行
+    // 生成代码行（code / mixed 且有模板）
     let codeLines = []
     let blankValues = {}
     const saved = this.loadDraft()
 
-    if (type === 'code' && this.templates && this.templates[this.questionId]) {
+    if (hasTemplate && this.templates && this.templates[this.questionId]) {
       const segments = this.templates[this.questionId].segments || []
       if (saved?.blanks) blankValues = { ...saved.blanks }
       codeLines = this.splitSegmentsToLines(segments)
     }
 
-    const answer = saved?.text || ''
+    // 文档部分：document 用 answer，mixed 用 docAnswer
+    const docAnswer = type === 'document' ? (saved?.text || '')
+      : type === 'mixed' ? (saved?.docText || '')
+      : ''
 
     this.setData({
       loading: false,
@@ -95,13 +100,19 @@ Page({
       task,
       codeLines,
       blankValues,
-      answer,
-      hasContent: type === 'code'
-        ? Object.keys(blankValues).some((k) => blankValues[k]?.trim())
-        : answer.trim().length > 0
+      answer: docAnswer,
+      docAnswer: docAnswer,
+      hasContent: this.computeHasContent(type, blankValues, docAnswer)
     })
 
     wx.setNavigationBarTitle({ title: (task.title || '实操任务').slice(0, 20) })
+  },
+
+  computeHasContent(type, blankValues, docText) {
+    const blanksFilled = Object.keys(blankValues).some((k) => blankValues[k]?.trim())
+    if (type === 'code') return blanksFilled
+    if (type === 'mixed') return blanksFilled || (docText && docText.trim().length > 0)
+    return docText && docText.trim().length > 0
   },
 
   loadDraft() {
@@ -151,15 +162,21 @@ Page({
     const blankValues = { ...this.data.blankValues, [id]: e.detail.value }
     this.setData({
       blankValues,
-      hasContent: Object.keys(blankValues).some((k) => blankValues[k]?.trim())
+      hasContent: this.computeHasContent(
+        this.data.task.type, blankValues,
+        this.data.task.type === 'mixed' ? this.data.docAnswer : this.data.answer
+      )
     })
   },
 
   onAnswerInput(e) {
+    const isMixed = this.data.task.type === 'mixed'
+    const answer = e.detail.value
     this.setData({
-      answer: e.detail.value,
+      answer,
+      docAnswer: isMixed ? answer : this.data.docAnswer,
       gradeResult: null,
-      hasContent: e.detail.value.trim().length > 0
+      hasContent: this.computeHasContent(this.data.task.type, this.data.blankValues, answer)
     })
   },
 
@@ -170,12 +187,19 @@ Page({
   saveDraft() {
     const task = this.data.task
     if (!task) return
+
+    const answerMap = {
+      code: { blanks: this.data.blankValues },
+      document: { text: this.data.answer },
+      mixed: { blanks: this.data.blankValues, docText: this.data.docAnswer }
+    }
+
     savePracticalSubmission({
       id: `practical:${task.id}:draft`,
       questionId: task.id,
       canonicalId: task.id,
       type: task.type,
-      answer: task.type === 'code' ? { blanks: this.data.blankValues } : { text: this.data.answer },
+      answer: answerMap[task.type] || {},
       status: 'draft',
       savedAt: new Date().toISOString()
     })
@@ -197,10 +221,7 @@ Page({
 
     wx.showLoading({ title: 'AI 判题中…', mask: true })
     try {
-      const submission = task.type === 'code'
-        ? { text: this.assembleCode() }
-        : { text: this.data.answer }
-
+      const submission = this.buildSubmission()
       const res = await wx.cloud.callFunction({
         name: CLOUD_FUNCTIONS.AI_GRADE,
         data: {
@@ -227,6 +248,20 @@ Page({
       wx.hideLoading()
       this.setData({ gradeResult: { error: err.message } })
     }
+  },
+
+  buildSubmission() {
+    const task = this.data.task
+    if (task.type === 'document') {
+      return { text: this.data.answer }
+    }
+    if (task.type === 'mixed') {
+      return {
+        text: this.assembleCode(),
+        docText: this.data.docAnswer
+      }
+    }
+    return { text: this.assembleCode() }
   },
 
   assembleCode() {

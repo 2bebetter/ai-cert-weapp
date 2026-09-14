@@ -34,6 +34,13 @@
   display: block;
   margin-bottom: 10px;
 }
+.sub-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  display: block;
+  margin-bottom: 10px;
+}
 
 /* 代码编辑器 */
 .code-scroll {

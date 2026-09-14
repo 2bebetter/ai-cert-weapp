@@ -156,3 +156,28 @@ export function buildReviewQueues(questions, histories, reviewStates) {
 
 const TYPE_LABELS = { judge: '判断题', single: '单选题', multiple: '多选题' }
 export function getTypeLabel(type) { return TYPE_LABELS[type] || type }
+
+/** 根据版本号判定实操题类型 */
+const VERSION_PATTERN = /(\d+\.\d+\.\d+)/
+
+export function practicalTaskType(question) {
+  const ver = (question.question || '').match(VERSION_PATTERN)?.[1] || ''
+  const major = ver.split('.')[0]
+  const minor = ver.split('.')[1]
+  // 1.2.x, 3.1.x, 4.x.x → 文档题
+  if (major === '4') return 'document'
+  if (major === '1' && minor === '2') return 'document'
+  if (major === '3' && minor === '1') return 'document'
+  // 2.x.x, 3.2.x → 混合题（代码+文档）
+  if (major === '2') return 'mixed'
+  if (major === '3' && minor === '2') return 'mixed'
+  // 1.1.x → 纯代码
+  return 'code'
+}
+
+/** 文本填空模板：4.1.x 培训大纲编写类题目的模板 */
+export function getTextFillTemplate(question) {
+  const ver = (question.question || '').match(VERSION_PATTERN)?.[1] || ''
+  // 4.x.x 文档题目前不需要特殊模板处理
+  return null
+}
