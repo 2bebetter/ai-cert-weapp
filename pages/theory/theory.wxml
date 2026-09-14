@@ -36,9 +36,9 @@
       <view class="question-head">
         <text class="tag {{typeTagClass}}">{{typeLabel}}</text>
         <text class="question-level">{{currentQuestion.level}}</text>
-        <button class="btn-ghost btn-sm favorite-btn" bindtap="toggleFavorite">
-          {{isFavorited ? '★' : '☆'}}
-        </button>
+        <text class="icon-btn" data-action="wrongbook" bindtap="onHeadAction">{{isWrongBook ? '❌' : '⬜'}}</text>
+        <text class="icon-btn" data-action="note" bindtap="onHeadAction">📝</text>
+        <text class="icon-btn favorite-btn" data-action="favorite" bindtap="onHeadAction">{{isFavorited ? '★' : '☆'}}</text>
       </view>
 
       <text class="question-text">{{currentQuestion.question}}</text>
@@ -70,6 +70,16 @@
         <text class="feedback-title">{{feedback.title}}</text>
         <text class="feedback-body">{{feedback.body}}</text>
       </view>
+
+      <!-- 提交后的操作按钮 -->
+      <view wx:if="{{submitted}}" class="post-actions">
+        <button class="btn btn-ghost btn-sm" bindtap="toggleWrongBook">
+          {{isWrongBook ? '✅ 已在错题本' : '➕ 加入错题本'}}
+        </button>
+        <button class="btn btn-ghost btn-sm" bindtap="openNoteModal">
+          📝 {{noteText ? '编辑笔记' : '记笔记'}}
+        </button>
+      </view>
     </view>
 
     <!-- 导航 -->
@@ -84,5 +94,17 @@
     <text>📚</text>
     <text>当前筛选没有题目</text>
     <text class="placeholder" wx:if="{{filterAnswerIndex === 0}}">当前筛选为"有答案的题"，试试切换到"全部理论题"</text>
+  </view>
+
+  <!-- 笔记弹窗 -->
+  <view class="overlay {{noteModalVisible ? '' : 'hidden'}}" bindtap="closeNoteModal">
+    <view class="note-modal" catchtap="">
+      <text class="note-modal-title">📝 笔记</text>
+      <textarea class="note-textarea" value="{{noteText}}" bindinput="onNoteInput" placeholder="记下你的思路、疑问或记忆要点…" maxlength="-1" auto-height></textarea>
+      <view class="note-modal-actions">
+        <button class="btn btn-ghost" bindtap="closeNoteModal">取消</button>
+        <button class="btn btn-primary" bindtap="saveNote">保存</button>
+      </view>
+    </view>
   </view>
 </view>

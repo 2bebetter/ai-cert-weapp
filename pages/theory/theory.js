@@ -236,6 +236,14 @@ Page({
     wx.showToast({ title: nowFav ? '已收藏' : '已取消', icon: 'none' })
   },
 
+  /** 题头图标按钮统一分发 */
+  onHeadAction(e) {
+    const action = e.currentTarget.dataset.action
+    if (action === 'wrongbook') this.toggleWrongBook()
+    else if (action === 'note') this.openNoteModal()
+    else if (action === 'favorite') this.toggleFavorite()
+  },
+
   toggleWrongBook() {
     const q = this.data.currentQuestion
     if (!q) return
