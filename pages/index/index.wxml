@@ -1,12 +1,12 @@
 <view class="page">
   <view class="hero">
     <text class="hero-title">AI Trainer 备考练习</text>
-    <text class="hero-sub">上海人社人工智能训练师三级/四级</text>
+    <text class="hero-sub">人工智能训练师三级/四级备考</text>
   </view>
 
   <view class="notice-card">
     <text class="notice-title">⚠️ 免责声明</text>
-    <text class="notice-body">本工具仅为考生备考练习，不是人社官方系统；题目为公开参考题库，不等于真实考试原题，请以上海人社官方考核为准。</text>
+    <text class="notice-body">本工具为个人开发的备考练习程序，题库来源于公开参考资料，仅供参考，不保证与真实考试内容一致；智能评测基于用户自行提供的第三方 API 密钥，评测结果仅供参考；所有学习数据仅保存在本地设备。</text>
   </view>
 
   <view class="stats-bar" wx:if="{{stats}}">
@@ -53,6 +53,6 @@
 
   <view class="footer-links">
     <navigator url="/pages/review/review" class="footer-link">📕 错题本与复习</navigator>
-    <navigator url="/pages/settings/settings" open-type="switchTab" class="footer-link">⚙️ 设置与 AI 配置</navigator>
+    <navigator url="/pages/settings/settings" open-type="switchTab" class="footer-link">⚙️ 设置</navigator>
   </view>
 </view>

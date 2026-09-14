@@ -138,7 +138,7 @@
       <view class="actions">
         <button class="btn btn-secondary" bindtap="saveDraft">保存草稿</button>
         <button class="btn btn-primary" bindtap="submitGrade" disabled="{{!hasContent}}">
-          ✅ AI 评测
+          ✅ 智能评测
         </button>
       </view>
 
@@ -148,7 +148,7 @@
           <text class="grade-title">判分失败：{{gradeResult.error}}</text>
         </block>
         <block wx:else>
-          <text class="grade-title">AI 判分：{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分</text>
+          <text class="grade-title">智能评测：{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分</text>
           <view wx:for="{{gradeResult.items}}" wx:key="id" class="grade-item">
             <text>{{item.id}}：{{item.score}} / {{item.max_score}} · {{item.reason}}</text>
           </view>

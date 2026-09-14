@@ -219,7 +219,7 @@ Page({
       return
     }
 
-    wx.showLoading({ title: 'AI 判题中…', mask: true })
+    wx.showLoading({ title: '智能评测中…', mask: true })
     try {
       const submission = this.buildSubmission()
       const res = await wx.cloud.callFunction({

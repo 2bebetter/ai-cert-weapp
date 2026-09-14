@@ -56,5 +56,12 @@ Page({
     } catch (err) {
       this.setData({ testResult: { ok: false, msg: `连接失败：${err.message}` } })
     }
+  },
+
+  copyGithubLink() {
+    wx.setClipboardData({
+      data: 'https://github.com/2bebetter/ai-cert-weapp',
+      success: () => wx.showToast({ title: '仓库链接已复制', icon: 'success' })
+    })
   }
 })

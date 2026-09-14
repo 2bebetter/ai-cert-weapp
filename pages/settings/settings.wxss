@@ -60,6 +60,7 @@
 .test-result.bad { background: #ffe8e6; color: #b8201a; }
 
 .about-section { text-align: center; }
+.github-btn { margin-top: 12px; }
 .about-title {
   font-size: 16px;
   font-weight: 600;
