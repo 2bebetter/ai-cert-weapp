@@ -51,21 +51,25 @@
   min-width: 100%;
 }
 .code-line {
-  display: flex;
+  display: block;
   padding: 0 8px;
   white-space: nowrap;
 }
 .code-line:hover { background: rgba(255,255,255,0.05); }
 .line-num {
+  display: inline-block;
+  vertical-align: top;
   width: 32px;
   text-align: right;
   padding-right: 12px;
   color: #858585;
   font-size: 12px;
-  flex-shrink: 0;
   user-select: none;
 }
-.line-content { flex: 1; display: flex; flex-wrap: nowrap; white-space: nowrap; }
+.line-content {
+  display: inline;
+  white-space: nowrap;
+}
 .code-text {
   color: #d4d4d4;
   white-space: pre;
