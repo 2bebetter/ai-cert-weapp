@@ -185,3 +185,26 @@ export function getTextFillTemplate(question) {
   // 4.x.x 文档题目前不需要特殊模板处理
   return null
 }
+
+/**
+ * 文档题子问拆分：按（1）（2）（3）… 分割题干
+ * 返回 [{ id: 'doc-1', num: '1', prompt: '子问文本' }]
+ * 无子问（如 4.x 大纲题）返回 []
+ */
+export function splitDocSubQuestions(question) {
+  const text = question.question || ''
+  const parts = text.split(/（(\d+)）/)
+  const subs = []
+  for (let i = 1; i < parts.length; i += 2) {
+    const prompt = (parts[i + 1] || '').trim()
+    if (prompt) {
+      subs.push({ id: `doc-${parts[i]}`, num: parts[i], prompt })
+    }
+  }
+  return subs
+}
+
+/** 判断文档题是否有多个子问 */
+export function hasDocSubQuestions(question) {
+  return splitDocSubQuestions(question).length > 1
+}

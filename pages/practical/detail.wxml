@@ -124,14 +124,32 @@
 
       <!-- 纯文档题 -->
       <block wx:else>
-        <textarea
-          class="doc-area"
-          value="{{answer}}"
-          bindinput="onAnswerInput"
-          placeholder="在此填写作答内容…"
-          maxlength="-1"
-          auto-height
-        ></textarea>
+        <!-- 多子问文档题 -->
+        <block wx:if="{{docSections.length}}">
+          <view wx:for="{{docSections}}" wx:key="key" class="doc-section">
+            <text class="sub-section-title">第{{item.num}}问</text>
+            <textarea
+              class="doc-area"
+              value="{{item.value}}"
+              data-key="{{item.key}}"
+              bindinput="onDocSectionInput"
+              placeholder="在此填写第{{item.num}}问答案…"
+              maxlength="-1"
+              auto-height
+            ></textarea>
+          </view>
+        </block>
+        <!-- 单框文档题（4.x 大纲类） -->
+        <block wx:else>
+          <textarea
+            class="doc-area"
+            value="{{answer}}"
+            bindinput="onAnswerInput"
+            placeholder="在此填写作答内容…"
+            maxlength="-1"
+            auto-height
+          ></textarea>
+        </block>
       </block>
 
       <!-- 操作按钮 -->

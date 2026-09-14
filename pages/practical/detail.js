@@ -1,5 +1,5 @@
 import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
-import { practicalTaskType } from '../../utils/domain'
+import { practicalTaskType, splitDocSubQuestions } from '../../utils/domain'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 Page({
@@ -7,8 +7,9 @@ Page({
     loading: true,
     loadError: false,
     task: null,
-    answer: '',           // 文档作答
+    answer: '',           // 文档作答（单框）
     docAnswer: '',        // 混合题的文档部分
+    docSections: [],      // 文档题多子问 [{ key, num, prompt, value }]
     // 代码填空
     codeLines: [],
     blankValues: {},
@@ -89,10 +90,28 @@ Page({
       codeLines = this.splitSegmentsToLines(segments)
     }
 
-    // 文档部分：document 用 answer，mixed 用 docAnswer
-    const docAnswer = type === 'document' ? (saved?.text || '')
-      : type === 'mixed' ? (saved?.docText || '')
-      : ''
+    // 文档部分：document 用 answer/sections，mixed 用 docAnswer
+    let docSections = []
+    let docAnswer = ''
+    if (type === 'document') {
+      const subs = splitDocSubQuestions(q)
+      if (subs.length > 0) {
+        const savedSections = (saved?.sections || []).reduce((map, s) => {
+          map[s.id] = s.value || ''
+          return map
+        }, {})
+        docSections = subs.map((s) => ({
+          key: s.id,
+          num: s.num,
+          prompt: s.prompt,
+          value: savedSections[s.id] || ''
+        }))
+      } else {
+        docAnswer = saved?.text || ''
+      }
+    } else if (type === 'mixed') {
+      docAnswer = saved?.docText || ''
+    }
 
     this.setData({
       loading: false,
@@ -101,17 +120,20 @@ Page({
       codeLines,
       blankValues,
       answer: docAnswer,
-      docAnswer: docAnswer,
-      hasContent: this.computeHasContent(type, blankValues, docAnswer)
+      docAnswer,
+      docSections,
+      hasContent: this.computeHasContent(type, blankValues, docAnswer, docSections)
     })
 
     wx.setNavigationBarTitle({ title: (task.title || '实操任务').slice(0, 20) })
   },
 
-  computeHasContent(type, blankValues, docText) {
+  computeHasContent(type, blankValues, docText, docSections) {
     const blanksFilled = Object.keys(blankValues).some((k) => blankValues[k]?.trim())
+    const sectionsFilled = (docSections || []).some((s) => s.value && s.value.trim().length > 0)
     if (type === 'code') return blanksFilled
     if (type === 'mixed') return blanksFilled || (docText && docText.trim().length > 0)
+    if (sectionsFilled) return true
     return docText && docText.trim().length > 0
   },
 
@@ -164,7 +186,8 @@ Page({
       blankValues,
       hasContent: this.computeHasContent(
         this.data.task.type, blankValues,
-        this.data.task.type === 'mixed' ? this.data.docAnswer : this.data.answer
+        this.data.task.type === 'mixed' ? this.data.docAnswer : this.data.answer,
+        this.data.docSections
       )
     })
   },
@@ -176,7 +199,20 @@ Page({
       answer,
       docAnswer: isMixed ? answer : this.data.docAnswer,
       gradeResult: null,
-      hasContent: this.computeHasContent(this.data.task.type, this.data.blankValues, answer)
+      hasContent: this.computeHasContent(this.data.task.type, this.data.blankValues, answer, this.data.docSections)
+    })
+  },
+
+  /** 文档题子问输入 */
+  onDocSectionInput(e) {
+    const key = e.currentTarget.dataset.key
+    const docSections = this.data.docSections.map((s) =>
+      s.key === key ? { ...s, value: e.detail.value } : s
+    )
+    this.setData({
+      docSections,
+      gradeResult: null,
+      hasContent: this.computeHasContent(this.data.task.type, this.data.blankValues, this.data.answer, docSections)
     })
   },
 
@@ -190,7 +226,9 @@ Page({
 
     const answerMap = {
       code: { blanks: this.data.blankValues },
-      document: { text: this.data.answer },
+      document: this.data.docSections.length
+        ? { sections: this.data.docSections.map((s) => ({ id: s.key, value: s.value })) }
+        : { text: this.data.answer },
       mixed: { blanks: this.data.blankValues, docText: this.data.docAnswer }
     }
 
@@ -253,6 +291,10 @@ Page({
   buildSubmission() {
     const task = this.data.task
     if (task.type === 'document') {
+      if (this.data.docSections.length) {
+        const sections = this.data.docSections.map((s) => `（${s.num}）${s.value || ''}`).join('\n')
+        return { text: sections }
+      }
       return { text: this.data.answer }
     }
     if (task.type === 'mixed') {

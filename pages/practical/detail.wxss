@@ -126,6 +126,12 @@
 }
 
 /* 文档作答区 */
+.doc-section {
+  margin-bottom: 16px;
+}
+.doc-section .sub-section-title {
+  margin-bottom: 8px;
+}
 .doc-area {
   width: 100%;
   min-height: 160px;
