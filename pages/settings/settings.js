@@ -1,5 +1,4 @@
 import { getAIConfig, saveAIConfig } from '../../utils/storage'
-import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 Page({
   data: {
@@ -43,20 +42,34 @@ Page({
     this.setData({ testResult: { ok: true, msg: '测试中…' } })
 
     try {
-      const res = await wx.cloud.callFunction({
-        name: CLOUD_FUNCTIONS.AI_GRADE,
-        data: {
-          apiKey,
-          baseUrl,
-          model,
-          action: 'test'
-        }
+      const endpoint = (baseUrl || 'https://api.openai.com/v1')
+        .replace(/\/$/, '')
+        .replace(/\/chat\/completions$/, '')
+
+      const res = await new Promise((resolve) => {
+        wx.request({
+          url: `${endpoint}/chat/completions`,
+          method: 'POST',
+          timeout: 15000,
+          header: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          data: {
+            model: model || 'deepseek-chat',
+            temperature: 0,
+            max_tokens: 16,
+            messages: [{ role: 'user', content: 'ping' }]
+          },
+          success: (r) => resolve({ ok: r.statusCode >= 200 && r.statusCode < 300, errMsg: r.data?.error?.message || `HTTP ${r.statusCode}` }),
+          fail: (e) => resolve({ ok: false, errMsg: e.errMsg || e.message })
+        })
       })
 
-      if (res.result && res.result.ok) {
+      if (res.ok) {
         this.setData({ testResult: { ok: true, msg: '连接成功 ✓' } })
       } else {
-        this.setData({ testResult: { ok: false, msg: res.result?.error || '连接失败' } })
+        this.setData({ testResult: { ok: false, msg: `连接失败：${res.errMsg}` } })
       }
     } catch (err) {
       this.setData({ testResult: { ok: false, msg: `连接失败：${err.message}` } })

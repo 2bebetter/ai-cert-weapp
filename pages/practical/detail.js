@@ -1,5 +1,4 @@
 import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
-import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 Page({
   data: {
@@ -196,38 +195,91 @@ Page({
     }
 
     wx.showLoading({ title: 'AI 判题中…', mask: true })
+
     try {
       const submission = task.type === 'code'
         ? { text: this.assembleCode() }
         : { text: this.data.answer }
 
-      const res = await wx.cloud.callFunction({
-        name: CLOUD_FUNCTIONS.AI_GRADE,
-        data: {
-          apiKey: config.apiKey,
-          baseUrl: config.baseUrl,
-          model: config.model,
-          question: task.question,
-          scoreItems: task.scoreItems,
-          submission,
-          reference: { text: '' }
-        }
-      })
+      const endpoint = (config.baseUrl || 'https://api.openai.com/v1')
+        .replace(/\/$/, '')
+        .replace(/\/chat\/completions$/, '')
 
+      const subText = submission.text || ''
+
+      // 构建判分 Prompt
+      const isCode = task.type === 'code'
+      const prompt = isCode
+        ? `你是严格的代码填空评分器。只依据考生实际提交代码和题目评分点评分。逐项检查：如果该评分项对应的代码仍包含下划线空缺，必须给该项0分。不要运行代码。每项分数只能是0到该项满分的整数。返回JSON对象 {"items":[{"id":"M1","score":0,"reason":"..."}]}。\n题目：${JSON.stringify(task.question)}\n评分点：${JSON.stringify(task.scoreItems)}\n考生提交代码：${subText}`
+        : `你是严格的文档作答评分器。根据题目要求和评分点逐项评阅考生的作答内容。每项分数只能是0到该项满分的整数。返回JSON对象 {"items":[{"id":"M1","score":0,"reason":"..."}]}。\n题目：${JSON.stringify(task.question)}\n评分点：${JSON.stringify(task.scoreItems)}\n考生作答：${subText}`
+
+      const res = await this.callLLM(endpoint, config.apiKey, config.model, prompt)
       wx.hideLoading()
-      const result = res.result
-      if (result.error) {
-        this.setData({ gradeResult: { error: result.error } })
+
+      if (res.error) {
+        this.setData({ gradeResult: { error: res.error } })
         return
       }
+
+      // 标准化评分结果
+      const raw = res.data
+      const returned = new Map((raw?.items || []).map((item, i) => [item.id || `M${i + 1}`, item]))
+      const items = task.scoreItems.map((item, i) => {
+        const id = item.id || `M${i + 1}`
+        const result = returned.get(id)
+        const score = Math.max(0, Math.min(Number(item.score), Number(result?.score) || 0))
+        return { id, score, max_score: Number(item.score), reason: result?.reason || 'AI 未返回该评分项' }
+      })
+      const totalScore = items.reduce((s, item) => s + item.score, 0)
       const maxScore = task.scoreItems.reduce((s, item) => s + Number(item.score), 0)
+
       this.setData({
-        gradeResult: { total_score: result.total_score, maxScore, items: result.items }
+        gradeResult: { total_score: totalScore, maxScore, items }
       })
     } catch (err) {
       wx.hideLoading()
       this.setData({ gradeResult: { error: err.message } })
     }
+  },
+
+  callLLM(baseUrl, apiKey, model, prompt) {
+    return new Promise((resolve) => {
+      wx.request({
+        url: `${baseUrl}/chat/completions`,
+        method: 'POST',
+        timeout: 60000,
+        header: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        data: {
+          model: model || 'deepseek-chat',
+          temperature: 0,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: '严格按给定参考答案判分，不要自行接受替代写法。' },
+            { role: 'user', content: prompt }
+          ]
+        },
+        success(res) {
+          if (res.statusCode >= 400) {
+            const msg = res.data?.error?.message || `HTTP ${res.statusCode}`
+            resolve({ error: `LLM API 返回错误: ${msg}` })
+            return
+          }
+          const content = res.data?.choices?.[0]?.message?.content || '{}'
+          try {
+            const parsed = JSON.parse(content.replace(/^```json\s*/i, '').replace(/```$/i, '').trim())
+            resolve({ data: parsed })
+          } catch (e) {
+            resolve({ error: `解析 AI 返回失败: ${e.message}，原始内容: ${content.slice(0, 100)}` })
+          }
+        },
+        fail(err) {
+          resolve({ error: `网络请求失败: ${err.errMsg || err.message}` })
+        }
+      })
+    })
   },
 
   assembleCode() {
