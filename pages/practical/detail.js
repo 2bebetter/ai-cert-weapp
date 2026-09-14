@@ -7,12 +7,11 @@ Page({
     loadError: false,
     task: null,
     answer: '',
-    // 代码填空相关
-    codeLines: [],          // 渲染用行数组 [{parts: [{kind,value,id}]}]
-    blankValues: {},        // 填空值 { blankId: value }
-    // 自评相关
-    scoreChecked: [],       // 评分点勾选状态
-    calculatedScore: 0,     // 自评总分
+    // 代码填空
+    codeLines: [],
+    blankValues: {},
+    // 评分标准折叠
+    criteriaOpen: false,
     hasContent: false,
     gradeResult: null,
     debugInfo: ''
@@ -51,11 +50,7 @@ Page({
 
     const q = questions.find((item) => String(item.id) === this.questionId)
     if (!q) {
-      this.setData({
-        loading: false,
-        loadError: true,
-        debugInfo: `未找到题目 ID=${this.questionId}，题库有 ${questions.length} 道题`
-      })
+      this.setData({ loading: false, loadError: true, debugInfo: `未找到题目 ID=${this.questionId}` })
       return
     }
 
@@ -81,26 +76,18 @@ Page({
       maxScore: q.score_total || (q.score_items || []).reduce((s, i) => s + Number(i.score), 0)
     }
 
-    // 生成代码行（代码任务且有模板）
+    // 从模板生成代码行
     let codeLines = []
     let blankValues = {}
-    const savedAnswer = this.loadDraft()
+    const saved = this.loadDraft()
 
     if (type === 'code' && this.templates && this.templates[this.questionId]) {
       const segments = this.templates[this.questionId].segments || []
-      // 恢复已填写的空白
-      if (savedAnswer?.blanks) {
-        blankValues = { ...savedAnswer.blanks }
-      }
-      // 拆分 segments 为行
+      if (saved?.blanks) blankValues = { ...saved.blanks }
       codeLines = this.splitSegmentsToLines(segments)
     }
 
-    const answer = savedAnswer?.text || savedAnswer?.code || ''
-    const scoreChecked = task.scoreItems.map((_, index) => {
-      return savedAnswer?.checkedIndexes?.includes(index) || false
-    })
-    const calculatedScore = this.calcScore(task.scoreItems, scoreChecked)
+    const answer = saved?.text || ''
 
     this.setData({
       loading: false,
@@ -109,8 +96,6 @@ Page({
       codeLines,
       blankValues,
       answer,
-      scoreChecked,
-      calculatedScore,
       hasContent: type === 'code'
         ? Object.keys(blankValues).some((k) => blankValues[k]?.trim())
         : answer.trim().length > 0
@@ -127,46 +112,31 @@ Page({
   },
 
   async loadTemplates() {
-    // 从云存储加载代码模板（非必需，加载失败不影响题目显示）
     try {
       const res = await wx.cloud.callFunction({ name: 'getTemplates' })
-      if (res.result && !res.result.error && typeof res.result === 'object') {
-        return res.result
-      }
+      if (res.result && !res.result.error && typeof res.result === 'object') return res.result
     } catch (err) {
       console.warn('getTemplates 云函数不可用:', err.message)
     }
-    // 本地缓存兜底
     try {
       const fs = wx.getFileSystemManager()
       const content = fs.readFileSync(`${wx.env.USER_DATA_PATH}/code-templates.json`, 'utf-8')
       return JSON.parse(content)
-    } catch (e2) {
-      console.warn('本地也无模板缓存')
+    } catch {
       return {}
     }
   },
 
-  // 将模板 segments 拆分为渲染行
   splitSegmentsToLines(segments) {
     const lines = []
     let currentLine = []
-
-    const flush = () => {
-      if (currentLine.length) {
-        lines.push(currentLine)
-        currentLine = []
-      }
-    }
-
+    const flush = () => { if (currentLine.length) { lines.push(currentLine); currentLine = [] } }
     for (const seg of segments) {
       if (seg.kind === 'text') {
         const parts = String(seg.value).split('\n')
         for (let i = 0; i < parts.length; i++) {
           if (i > 0) flush()
-          if (parts[i].length > 0) {
-            currentLine.push({ kind: 'text', value: parts[i] })
-          }
+          if (parts[i].length > 0) currentLine.push({ kind: 'text', value: parts[i] })
         }
       } else {
         currentLine.push({ kind: 'blank', id: seg.id, value: '' })
@@ -186,39 +156,26 @@ Page({
   },
 
   onAnswerInput(e) {
-    this.setData({ answer: e.detail.value, gradeResult: null, hasContent: e.detail.value.trim().length > 0 })
+    this.setData({
+      answer: e.detail.value,
+      gradeResult: null,
+      hasContent: e.detail.value.trim().length > 0
+    })
   },
 
-  // 评分点自评勾选
-  toggleScoreItem(e) {
-    const index = Number(e.currentTarget.dataset.index)
-    const scoreChecked = [...this.data.scoreChecked]
-    scoreChecked[index] = !scoreChecked[index]
-    const calculatedScore = this.calcScore(this.data.task.scoreItems, scoreChecked)
-    this.setData({ scoreChecked, calculatedScore })
-  },
-
-  calcScore(scoreItems, checked) {
-    return scoreItems.reduce((sum, item, index) => {
-      return sum + (checked[index] ? Number(item.score) : 0)
-    }, 0)
+  toggleCriteria() {
+    this.setData({ criteriaOpen: !this.data.criteriaOpen })
   },
 
   saveDraft() {
     const task = this.data.task
     if (!task) return
-
-    const answer = task.type === 'code'
-      ? { blanks: this.data.blankValues }
-      : { text: this.data.answer }
-
     savePracticalSubmission({
       id: `practical:${task.id}:draft`,
       questionId: task.id,
       canonicalId: task.id,
       type: task.type,
-      answer,
-      checkedIndexes: this.data.scoreChecked.map((v, i) => v ? i : -1).filter((i) => i >= 0),
+      answer: task.type === 'code' ? { blanks: this.data.blankValues } : { text: this.data.answer },
       status: 'draft',
       savedAt: new Date().toISOString()
     })
@@ -228,29 +185,21 @@ Page({
   async submitGrade() {
     const task = this.data.task
     const config = getAIConfig()
-
     if (!config.apiKey) {
       wx.showModal({
         title: '未配置 API Key',
         content: '请先到"我的"页面配置 API Key，才能使用 AI 评测。',
         confirmText: '去配置',
-        success: (res) => {
-          if (res.confirm) {
-            wx.switchTab({ url: '/pages/settings/settings' })
-          }
-        }
+        success: (res) => { if (res.confirm) wx.switchTab({ url: '/pages/settings/settings' }) }
       })
       return
     }
 
     wx.showLoading({ title: 'AI 判题中…', mask: true })
-
     try {
-      // 组装提交内容：代码任务提交完整代码，文档任务提交文本
-      let submission = { text: this.data.answer }
-      if (task.type === 'code') {
-        submission = { code: this.assembleCode() }
-      }
+      const submission = task.type === 'code'
+        ? { text: this.assembleCode() }
+        : { text: this.data.answer }
 
       const res = await wx.cloud.callFunction({
         name: CLOUD_FUNCTIONS.AI_GRADE,
@@ -266,20 +215,14 @@ Page({
       })
 
       wx.hideLoading()
-
       const result = res.result
       if (result.error) {
         this.setData({ gradeResult: { error: result.error } })
         return
       }
-
       const maxScore = task.scoreItems.reduce((s, item) => s + Number(item.score), 0)
       this.setData({
-        gradeResult: {
-          total_score: result.total_score,
-          maxScore,
-          items: result.items
-        }
+        gradeResult: { total_score: result.total_score, maxScore, items: result.items }
       })
     } catch (err) {
       wx.hideLoading()
@@ -287,9 +230,8 @@ Page({
     }
   },
 
-  // 组装完整代码（文本+填空值）
   assembleCode() {
-    const segments = this.templates[this.questionId]?.segments || []
+    const segments = this.templates?.[this.questionId]?.segments || []
     return segments.map((seg) => {
       if (seg.kind === 'blank') return this.data.blankValues[seg.id] || '______'
       return seg.value

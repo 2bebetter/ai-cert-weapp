@@ -27,6 +27,20 @@
       </view>
     </view>
 
+    <!-- 评分标准（默认收起，可展开） -->
+    <view class="criteria-section" wx:if="{{task.scoreItems.length}}">
+      <view class="criteria-header" bindtap="toggleCriteria">
+        <text class="criteria-title">📋 评分标准（{{task.maxScore}} 分）</text>
+        <text class="criteria-arrow">{{criteriaOpen ? '▲' : '▼'}}</text>
+      </view>
+      <view class="criteria-body" wx:if="{{criteriaOpen}}">
+        <view wx:for="{{task.scoreItems}}" wx:key="id" class="criteria-item">
+          <text class="criteria-item-score">{{item.score}} 分</text>
+          <text class="criteria-item-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 作答区 -->
     <view class="answer-section">
       <text class="section-title">作答区</text>
@@ -35,10 +49,10 @@
       <block wx:if="{{task.type === 'code'}}">
         <scroll-view class="code-scroll" scroll-y enhanced show-scrollbar="{{false}}">
           <view class="code-editor">
-            <view wx:for="{{codeLines}}" wx:for-item="line" wx:key="*this" class="code-line">
+            <view wx:for="{{codeLines}}" wx:for-item="line" wx:key="index" class="code-line">
               <text class="line-num">{{index + 1}}</text>
               <view class="line-content">
-                <block wx:for="{{line}}" wx:for-item="part" wx:key="*this">
+                <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
                   <!-- 留空区 -->
                   <input wx:if="{{part.kind === 'blank'}}"
                     class="code-blank"
@@ -68,21 +82,6 @@
           auto-height
         ></textarea>
       </block>
-
-      <!-- 自评评分点（复选框） -->
-      <view class="self-score" wx:if="{{task.scoreItems.length}}">
-        <text class="section-title">自评评分点</text>
-        <text class="score-hint">勾选你认为已完成的评分项，系统自动计算自评分</text>
-        <view wx:for="{{task.scoreItems}}" wx:key="id" class="score-item" bindtap="toggleScoreItem" data-index="{{index}}">
-          <checkbox checked="{{scoreChecked[index]}}" color="#007aff" />
-          <text class="score-desc">{{item.desc}}</text>
-          <text class="score-value">{{item.score}} 分</text>
-        </view>
-        <view class="score-total">
-          <text>自评总分：</text>
-          <text class="total-num">{{calculatedScore}} / {{task.maxScore}}</text>
-        </view>
-      </view>
 
       <!-- 操作按钮 -->
       <view class="actions">
