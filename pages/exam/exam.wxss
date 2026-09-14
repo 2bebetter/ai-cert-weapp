@@ -26,6 +26,51 @@
   border-bottom: none;
 }
 
+/* 考试记录 */
+.history-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 16px;
+  box-shadow: var(--shadow);
+}
+.history-title {
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8px;
+}
+.history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.history-row:last-child { border-bottom: none; }
+.history-date {
+  color: var(--text-3);
+  white-space: nowrap;
+  flex-shrink: 1;
+}
+.history-score {
+  color: var(--text-1);
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+  flex-shrink: 0;
+}
+.history-acc {
+  color: var(--primary);
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+  flex-shrink: 0;
+  min-width: 48px;
+}
+
 /* 进行中 */
 .exam-page { height: 100vh; display: flex; flex-direction: column; }
 .exam-topbar {
