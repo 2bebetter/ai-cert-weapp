@@ -41,7 +41,8 @@ export const DEFAULT_AI_CONFIG = {
 
 /** 云函数名称 */
 export const CLOUD_FUNCTIONS = {
-  AI_GRADE: 'aiGrade'
+  AI_GRADE: 'aiGrade',
+  SUBMIT_FEEDBACK: 'submitFeedback'
 }
 
 /** 本地存储 key */
