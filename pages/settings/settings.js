@@ -1,4 +1,4 @@
-import { getAIConfig, saveAIConfig, exportAllData, importAllData } from '../../utils/storage'
+import { getAIConfig, saveAIConfig } from '../../utils/storage'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 Page({
@@ -61,62 +61,5 @@ Page({
     } catch (err) {
       this.setData({ testResult: { ok: false, msg: `连接失败：${err.message}` } })
     }
-  },
-
-  exportData() {
-    const data = exportAllData()
-    const json = JSON.stringify(data, null, 2)
-
-    // 保存到临时文件并分享
-    const fs = wx.getFileSystemManager()
-    const path = `${wx.env.USER_DATA_PATH}/ai-trainer-backup.json`
-    fs.writeFileSync(path, json, 'utf8')
-
-    wx.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline']
-    })
-
-    wx.setClipboardData({
-      data: '学习数据已导出到: ' + path,
-      success: () => wx.showToast({ title: '数据已导出', icon: 'success' })
-    })
-  },
-
-  importData() {
-    wx.chooseMessageFile({
-      count: 1,
-      type: 'file',
-      success: (res) => {
-        const file = res.tempFiles[0]
-        const fs = wx.getFileSystemManager()
-        try {
-          const content = fs.readFileSync(file.path, 'utf8')
-          const data = JSON.parse(content)
-          importAllData(data)
-          wx.showToast({ title: '导入成功', icon: 'success' })
-        } catch (err) {
-          wx.showToast({ title: `导入失败：${err.message}`, icon: 'none' })
-        }
-      }
-    })
-  },
-
-  clearData() {
-    wx.showModal({
-      title: '确认清除',
-      content: '所有学习数据将被清除，包括错题本、考试记录、笔记等。此操作不可撤销！',
-      success: (res) => {
-        if (res.confirm) {
-          try {
-            wx.clearStorageSync()
-            this.loadConfig()
-            wx.showToast({ title: '已清除', icon: 'success' })
-          } catch (err) {
-            wx.showToast({ title: `清除失败：${err.message}`, icon: 'none' })
-          }
-        }
-      }
-    })
   }
 })

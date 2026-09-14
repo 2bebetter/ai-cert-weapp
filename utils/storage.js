@@ -174,34 +174,3 @@ export function setReviewState(id, state) {
   all[id] = { ...(all[id] || {}), ...state }
   set(KEYS.REVIEW_STATES, all)
 }
-
-// ---- 数据导出/导入 ----
-
-export function exportAllData() {
-  return {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    data: {
-      wrongBook: getWrongBook(),
-      favorites: [...getFavorites()],
-      theoryAttempts: getTheoryAttempts(),
-      theorySummaries: getTheorySummaries(),
-      reviewStates: getReviewStates(),
-      notes: getNotes(),
-      examSessions: getExamSessions(),
-      practicalSubmissions: getPracticalSubmissions()
-    }
-  }
-}
-
-export async function importAllData(snapshot) {
-  if (!snapshot?.data) throw new Error('数据格式无效')
-  set(KEYS.WRONG_BOOK, snapshot.data.wrongBook || [])
-  set(KEYS.FAVORITES, snapshot.data.favorites || [])
-  set(KEYS.THEORY_ATTEMPTS, snapshot.data.theoryAttempts || [])
-  set(KEYS.THEORY_SUMMARIES, snapshot.data.theorySummaries || {})
-  set(KEYS.REVIEW_STATES, snapshot.data.reviewStates || {})
-  set(KEYS.NOTES, snapshot.data.notes || { theory: {}, practical: {} })
-  set(KEYS.EXAM_SESSIONS, snapshot.data.examSessions || [])
-  set(KEYS.PRACTICAL_SUBMISSIONS, snapshot.data.practicalSubmissions || [])
-}

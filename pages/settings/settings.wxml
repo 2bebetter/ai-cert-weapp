@@ -29,15 +29,6 @@
     </text>
   </view>
 
-  <!-- 数据管理 -->
-  <view class="section">
-    <text class="section-title">数据管理</text>
-
-    <button class="btn btn-secondary btn-block" bindtap="exportData">导出学习数据</button>
-    <button class="btn btn-secondary btn-block" bindtap="importData">导入学习数据</button>
-    <button class="btn btn-danger btn-block" bindtap="clearData">清除所有数据</button>
-  </view>
-
   <!-- 关于 -->
   <view class="section about-section">
     <text class="about-title">AI Trainer 备考练习</text>
