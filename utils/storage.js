@@ -16,7 +16,6 @@ const KEYS = {
   NOTES: `${PREFIX}notes`,                     // { theory: { [qid]: string }, practical: { [key]: string } }
   EXAM_SESSIONS: `${PREFIX}exam_sessions`,
   PRACTICAL_SUBMISSIONS: `${PREFIX}practical_submissions`,
-  AI_CONFIG: `${PREFIX}ai_config`,             // { apiKey, baseUrl, model }
   EXAM_IN_PROGRESS: `${PREFIX}exam_in_progress`, // 未完成的考试状态
 }
 
@@ -91,16 +90,6 @@ export function saveExamSession(session) {
   const list = getExamSessions()
   list.unshift(session)
   set(KEYS.EXAM_SESSIONS, list.slice(0, 100)) // 最多保留 100 条
-}
-
-// ---- AI 配置 ----
-
-export function getAIConfig() {
-  return get(KEYS.AI_CONFIG) || {}
-}
-
-export function saveAIConfig(config) {
-  return set(KEYS.AI_CONFIG, config)
 }
 
 // ---- 笔记 ----

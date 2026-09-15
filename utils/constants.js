@@ -44,21 +44,19 @@ export const TASK_STATUSES = [
   { value: 'needsReview', label: '待复盘' }
 ]
 
-/** 默认 AI 判题配置 */
-export const DEFAULT_AI_CONFIG = {
-  baseUrl: 'https://api.deepseek.com/v1',
-  model: 'deepseek-chat',
-  apiKey: ''
-}
-
-/** 云函数名称 */
+/**
+ * 云函数名称。
+ *
+ * 原来还有个 AI_GRADE: 'aiGrade'，用于实操文档题的智能评测。
+ * 微信把「AI 生成评语」归入深度合成类目，而该类目个人主体不开放，
+ * 所以已整体移除：文档题改为直接展示参考答案，不再判分。
+ * 详见 pages/practical/detail.js 的 submitGrade。
+ */
 export const CLOUD_FUNCTIONS = {
-  AI_GRADE: 'aiGrade',
   SUBMIT_FEEDBACK: 'submitFeedback'
 }
 
 /** 本地存储 key */
 export const STORAGE_KEYS = {
-  AI_CONFIG: 'ai_cert_ai_config',
   EXAM_IN_PROGRESS: 'ai_cert_exam_in_progress'
 }

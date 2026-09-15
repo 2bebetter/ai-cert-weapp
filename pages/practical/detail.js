@@ -1,10 +1,15 @@
-import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
+import { savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
 import { loadTemplates } from '../../utils/templates'
-import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswers, extractKeywords, gradeByScorePoints, parseQuestionSections, splitHighlight, splitInlineCode } from '../../utils/domain'
-import { CLOUD_FUNCTIONS } from '../../utils/constants'
+import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswers, gradeByScorePoints, parseQuestionSections, splitHighlight, splitInlineCode } from '../../utils/domain'
+import { REFERENCE_ANSWERS } from '../../utils/reference-answers'
 
 const UI_STATE_KEY = 'practical_ui_state'
 const VISIBLE_TASKS = 3   // 收起时显示的任务条数
+
+/** 评分点是否属于「文档作答」部分 —— 这些不再判分，只在参考答案里对照 */
+function isDocScoreItem(item) {
+  return /回答|规范|流程|描述/.test((item && item.desc) || '')
+}
 
 const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
 
@@ -31,6 +36,7 @@ Page({
     hasMoreTasks: false,
     hasContent: false,
     gradeResult: null,
+    referenceAnswer: null,  // 文档题的参考答案（按版本号索引）
     debugInfo: ''
   },
 
@@ -219,7 +225,10 @@ Page({
     return { filled: filledBlanks, total: blankIds.length || 1 }
   },
 
-  /** 记录一次完成（列表页据此显示「已练习」+ 得分） */
+  /**
+   * 记录一次完成，列表页据此显示「已练习」。
+   * score 传 null 表示该题不计分（文档题），此时不写分数，列表只显示状态。
+   */
   markSubmitted(score, maxScore) {
     const task = this.data.task
     if (!task) return
@@ -230,18 +239,23 @@ Page({
         : { text: this.data.answer },
       mixed: { blanks: this.data.blankValues, docText: this.data.docAnswer }
     }
-    savePracticalSubmission({
+    const record = {
       id: `practical:${task.id}:submitted`,
       questionId: task.id,
       canonicalId: task.id,
       type: task.type,
       answer: answerMap[task.type] || {},
       status: 'submitted',
-      score: Number(score) || 0,
-      maxScore: Number(maxScore) || 0,
       progress: this.computeProgress(),
       submittedAt: new Date().toISOString()
-    })
+    }
+    // 文档题不计分（score 传 null）时不写 score/maxScore 字段，
+    // 列表页据此显示「已练习」而不是「0 / 0 分」
+    if (typeof score === 'number' && !Number.isNaN(score)) {
+      record.score = Number(score)
+      record.maxScore = Number(maxScore) || 0
+    }
+    savePracticalSubmission(record)
   },
 
   splitSegmentsToLines(segments) {
@@ -427,12 +441,20 @@ Page({
 
   noop() {},
 
-  /** 混合题/文档题 AI 评测 */
+  /**
+   * 混合题 / 文档题：提交后展示参考答案。
+   *
+   * 这里原来是把「题目 + 用户作答」发给大模型判分。微信把「AI 生成评语」
+   * 归入深度合成类目，而该类目个人主体不开放，所以整体移除了 AI 判分：
+   *   · 混合题 —— 代码部分仍按评分点规则匹配判分（不涉及 AI），
+   *                文档部分改为展示参考答案，不计分；
+   *   · 文档题 —— 不计分，只展示参考答案与评分标准，由考生自行对照。
+   * 参考答案来自素材里各题的 reference 文档，按版本号索引。
+   */
   async submitGrade() {
     const task = this.data.task
-    const config = getAIConfig()
 
-    // 混合题：拆成代码部分(按评分点判分) + 文档部分(AI)
+    // 混合题：代码部分按评分点判分 + 文档部分展示参考答案
     if (task.type === 'mixed') {
       const segments = this.templates?.[this.questionId]?.segments || []
       const refAns = this.templates?.[this.questionId]?.referenceAnswers || {}
@@ -446,133 +468,50 @@ Page({
 
       // 代码部分：按「评分点 → 填空」映射判分
       let codeResult = gradeByScorePoints(blankStatusMap, this.questionId)
-      let docItems = []
-      if (codeResult && codeResult.items.length) {
-        const docIds = new Set(codeResult.docItems)
-        docItems = (task.scoreItems || []).filter((i) => docIds.has(i.id))
-      } else {
-        // 无映射时回退：关键词判分 + 描述正则分离文档题
-        const codeItems = []
-        for (const item of (task.scoreItems || [])) {
-          if (/回答|规范|流程|描述/.test(item.desc || '')) docItems.push(item)
-          else codeItems.push(item)
-        }
-        codeResult = codeItems.length ? gradeCodeTask(this.assembleCode(), codeItems) : { total_score: 0, items: [] }
+      if (!codeResult || !codeResult.items.length) {
+        // 无映射时回退到关键词判分；文档类评分点不参与（它们不计分）
+        const codeItems = (task.scoreItems || []).filter((i) => !isDocScoreItem(i))
+        codeResult = codeItems.length
+          ? gradeCodeTask(this.assembleCode(), codeItems)
+          : { total_score: 0, items: [] }
       }
 
-      let aiResult
-      // 文档部分AI评测
-      if (docItems.length && this.data.docAnswer.trim()) {
-        if (!config.apiKey) {
-          wx.showModal({
-            title: '未配置 API Key',
-            content: '文档部分需要 AI 评测，请先到"设置"页面配置 API Key。',
-            confirmText: '去配置',
-            success: (r) => { if (r.confirm) wx.switchTab({ url: '/pages/settings/settings' }) }
-          })
-          return
-        }
-        wx.showLoading({ title: '文档评测中…', mask: true })
-        try {
-          const res = await wx.cloud.callFunction({
-            name: CLOUD_FUNCTIONS.AI_GRADE,
-            data: {
-              apiKey: config.apiKey,
-              baseUrl: config.baseUrl,
-              model: config.model,
-              question: task.question,
-              scoreItems: docItems,
-              submission: { text: this.data.docAnswer }
-            }
-          })
-          wx.hideLoading()
-          aiResult = res.result
-        } catch (err) {
-          wx.hideLoading()
-          aiResult = { error: err.message }
-        }
-      }
-
-      // 合并结果
-      const allItems = [
-        ...(codeResult?.items || []),
-        ...(aiResult?.items || docItems.map((i) => ({ id: i.id, max_score: Number(i.score), score: 0, reason: 'AI 评测未完成' })))
-      ]
-      const totalScore = (codeResult?.total_score || 0) + (aiResult?.total_score || 0)
-      const maxScore = allItems.reduce((s, i) => s + (i.max_score || 0), 0)
+      // 文档部分不再判分，只展示参考答案 —— 分数只反映代码部分
+      const maxScore = codeResult.autoMax || codeResult.maxScore || 0
       this.setData({
         gradeResult: {
-          total_score: totalScore, maxScore, items: allItems,
-          mode: 'mixed',
-          error: aiResult?.error || null
+          total_score: codeResult.total_score || 0,
+          maxScore,
+          autoMax: maxScore,
+          items: codeResult.items || [],
+          mode: 'rule'
         },
+        referenceAnswer: this.referenceAnswerFor(task),
+        criteriaOpen: true,   // 文档部分不计分，自动展开评分标准方便对照
         blankAnswers,
         blankStatusMap,
         blankAnswerMap,
         verified: true
       })
+      this.markSubmitted(codeResult.total_score || 0, maxScore)
       return
     }
 
-    // 文档题：AI 评测
-    if (!config.apiKey) {
-      wx.showModal({
-        title: '未配置 API Key',
-        content: '请先到"设置"页面配置 API Key，才能使用 AI 评测。',
-        confirmText: '去配置',
-        success: (r) => { if (r.confirm) wx.switchTab({ url: '/pages/settings/settings' }) }
-      })
-      return
-    }
-
-    wx.showLoading({ title: '智能评测中…', mask: true })
-    try {
-      const submission = this.buildSubmission()
-      const res = await wx.cloud.callFunction({
-        name: CLOUD_FUNCTIONS.AI_GRADE,
-        data: {
-          apiKey: config.apiKey,
-          baseUrl: config.baseUrl,
-          model: config.model,
-          question: task.question,
-          scoreItems: task.scoreItems,
-          submission
-        }
-      })
-
-      wx.hideLoading()
-      const result = res.result
-      if (result.error) {
-        this.setData({ gradeResult: { error: result.error } })
-        return
-      }
-      const maxScore = task.scoreItems.reduce((s, item) => s + Number(item.score), 0)
-      this.setData({
-        gradeResult: { total_score: result.total_score, maxScore, items: result.items, mode: 'ai' }
-      })
-      this.markSubmitted(result.total_score, maxScore)
-    } catch (err) {
-      wx.hideLoading()
-      this.setData({ gradeResult: { error: err.message } })
-    }
+    // 文档题：不计分，只展示参考答案与评分标准
+    this.setData({
+      gradeResult: { total_score: 0, maxScore: 0, autoMax: 0, items: [], mode: 'reference' },
+      referenceAnswer: this.referenceAnswerFor(task),
+      criteriaOpen: true,   // 文档题不计分，自动展开评分标准方便对照
+      verified: true
+    })
+    // 记一次「已练习」，但不写入分数
+    this.markSubmitted(null, null)
   },
 
-  buildSubmission() {
-    const task = this.data.task
-    if (task.type === 'document') {
-      if (this.data.docSections.length) {
-        const sections = this.data.docSections.map((s) => `（${s.num}）${s.value || ''}`).join('\n')
-        return { text: sections }
-      }
-      return { text: this.data.answer }
-    }
-    if (task.type === 'mixed') {
-      return {
-        text: this.assembleCode(),
-        docText: this.data.docAnswer
-      }
-    }
-    return { text: this.assembleCode() }
+  /** 取该题所用模型的版本号（1.2.1 / 3.1.1 …）；参考答案按版本号索引 */
+  referenceAnswerFor(task) {
+    const m = String((task && task.question) || '').match(/(\d+\.\d+\.\d+)/)
+    return m ? (REFERENCE_ANSWERS[m[1]] || null) : null
   },
 
   assembleCode() {

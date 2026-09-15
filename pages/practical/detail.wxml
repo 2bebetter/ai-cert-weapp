@@ -142,7 +142,7 @@
           <!-- 验证结果总分行 -->
           <view wx:if="{{verified}}" class="verify-summary {{gradeResult.total_score === gradeResult.autoMax ? 'summary-pass' : 'summary-fail'}}">
             <text class="summary-score">{{gradeResult.total_score}} / {{gradeResult.autoMax}} 分</text>
-            <text class="summary-count">{{gradeResult.docMax ? '文档题 ' + gradeResult.docMax + ' 分需 AI 判题 · ' : ''}}点击填空查看解析</text>
+            <text class="summary-count">点击填空查看解析</text>
           </view>
 
           <!-- 评分点明细 -->
@@ -154,10 +154,6 @@
             >
               <text class="point-badge">{{item.score}}/{{item.max_score}}</text>
               <text class="point-desc">{{item.desc}}</text>
-            </view>
-            <view wx:if="{{gradeResult.docItems.length}}" class="point-row point-doc">
-              <text class="point-badge">AI</text>
-              <text class="point-desc">文档题 {{gradeResult.docMax}} 分需 AI 判题</text>
             </view>
           </view>
         </block>
@@ -214,24 +210,35 @@
         验证答案
       </button>
       <button wx:else class="btn btn-primary" bindtap="submitGrade" disabled="{{!hasContent}}">
-        智能评测
+        查看参考答案
       </button>
     </view>
 
-    <!-- 评分结果（混合题 / 文档题 AI 评测） -->
-    <view wx:if="{{gradeResult && task.type !== 'code'}}" class="card grade-result {{gradeResult.error ? 'bad' : 'ok'}}">
-      <block wx:if="{{gradeResult.error}}">
-        <text class="grade-title">判分失败：{{gradeResult.error}}</text>
-      </block>
-      <block wx:else>
+    <!-- 参考答案（混合题 / 文档题，不再 AI 判分） -->
+    <view wx:if="{{gradeResult && task.type !== 'code'}}" class="card grade-result ok">
+      <block wx:if="{{task.type === 'mixed'}}">
         <text class="grade-title">
-          智能评测：{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分
-          <text class="grade-mode">{{gradeResult.mode === 'rule' ? '· 规则匹配' : '· AI'}}</text>
+          代码部分：{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分
+          <text class="grade-mode">· 规则匹配</text>
         </text>
         <view wx:for="{{gradeResult.items}}" wx:key="id" class="grade-item">
           <text>{{item.id}}：{{item.score}} / {{item.max_score}} · {{item.reason}}</text>
         </view>
       </block>
+      <block wx:else>
+        <text class="grade-title">文档题不计分，请对照参考答案自查</text>
+      </block>
+
+      <view class="ref-answer">
+        <text class="ref-title">参考答案</text>
+        <block wx:if="{{referenceAnswer}}">
+          <view wx:for="{{referenceAnswer}}" wx:key="title" class="ref-section">
+            <text class="ref-section-title">{{item.title}}</text>
+            <text class="ref-section-body">{{item.body}}</text>
+          </view>
+        </block>
+        <text wx:else class="ref-section-body">该题暂无参考答案，请对照上方评分标准自查。</text>
+      </view>
     </view>
   </view>
 
