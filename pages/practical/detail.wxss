@@ -598,7 +598,11 @@ page {
 .action-bar {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
+  /* 对齐上方卡片：.card 的 16px 左右外边距来自 app.wxss 的
+     .card { margin: 8px 16px }，本页只覆盖了它的下边距。
+     操作栏必须补上同样的 16px，否则会铺满 .content 全宽、
+     左右顶到屏幕边缘，与卡片对不齐。 */
+  margin: 0 16px 20px;
 }
 
 .action-bar .btn {
