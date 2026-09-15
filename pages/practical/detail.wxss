@@ -330,7 +330,7 @@ page {
 
 /* 代码容器：max-height 420px，内部纵向滚动 */
 .code-scroll {
-  max-height: 420px;
+  max-height: 560px;   /* 代码区高度：560px ≈ 19 行；想再高改这一行 */
   background: #1e2530;
   border-radius: 8px;
   margin-right: 16px;
