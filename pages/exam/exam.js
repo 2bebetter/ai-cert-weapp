@@ -27,12 +27,37 @@ Page({
 
   onLoad() {
     this.loadHistory()
+    // 有未完成的考试就问用户要不要接着考
+    this.checkSavedExam()
+  },
+
+  onHide() {
+    // 切到后台时补存一次，见 saveIfInProgress 注释
+    this.saveIfInProgress()
   },
 
   onUnload() {
     if (this.data.timer) {
       clearInterval(this.data.timer)
     }
+    this.saveIfInProgress()
+  },
+
+  /**
+   * 考试进行中才存档。
+   *
+   * 为什么需要单独存一次：答卷过程中只有 selectOption 会调
+   * saveExamState，而「翻到第几题」和「标记了哪几题」都不走那条路
+   * （prevQuestion / nextQuestion / jumpToQuestion / toggleMark 都不存盘）。
+   * 只在作答时存档的话，用户翻到第 47 题就切出去，恢复时会回到上次
+   * 作答的那一题。在 onHide / onUnload 各补一次即可覆盖，不用每次
+   * 翻页都写一遍存储。
+   *
+   * 交卷后 examStarted 已是 false、examFinished 为 true，绝不能在这里
+   * 把 submitExam 刚 clearSavedExam() 掉的存档又写回去。
+   */
+  saveIfInProgress() {
+    if (this.data.examStarted && !this.data.examFinished) this.saveExamState()
   },
 
   loadHistory() {
@@ -70,31 +95,115 @@ Page({
       }
     }
 
-    const examQuestions = buildTheoryExam(questions)
-    const endTime = Date.now() + EXAM_DURATION
-    const groups = this.buildGroups(examQuestions)
+    this.beginExam({
+      questions: buildTheoryExam(questions),
+      answers: {},
+      marked: new Set(),
+      currentIndex: 0,
+      endTime: Date.now() + EXAM_DURATION
+    })
+  },
+
+  /**
+   * 检查有没有未完成的考试，有就问用户要不要接着考。
+   *
+   * 背景：saveExam() 一直把进度写进本地（每题作答后都会自动存一次），
+   * 但 getSavedExam() 只 import 了、从来没有被调用过 —— 存的进度没人读，
+   * 一场 90 分钟的考试中途退出就全部作废。这里补上恢复入口。
+   */
+  checkSavedExam() {
+    const saved = getSavedExam()
+    if (!saved || !Array.isArray(saved.questions) || !saved.questions.length) return
+
+    // 考试时间已经走完的，直接作废
+    if (!saved.endTime || saved.endTime - Date.now() <= 0) {
+      clearSavedExam()
+      return
+    }
+
+    const minutes = Math.ceil((saved.endTime - Date.now()) / 60000)
+    wx.showModal({
+      title: '发现未完成的考试',
+      content: `还剩约 ${minutes} 分钟，是否继续？`,
+      confirmText: '继续考试',
+      cancelText: '重新开始',
+      success: (res) => {
+        if (res.confirm) this.resumeExam(saved)
+        else {
+          clearSavedExam()
+          wx.showToast({ title: '已清除，可重新开始', icon: 'none' })
+        }
+      }
+    })
+  },
+
+  /** 按存下来的题号还原试卷，接着上次考 */
+  resumeExam(saved) {
+    const app = getApp()
+    const pool = app.globalData.theoryQuestions || []
+    if (!pool.length) {
+      wx.showToast({ title: '题库未加载，请稍后', icon: 'none' })
+      return
+    }
+
+    const byId = {}
+    pool.forEach((q) => { byId[String(q.id)] = q })
+    const questions = saved.questions.map((id) => byId[String(id)])
+
+    // 题库更新导致有题目找不回来时，宁可重开也不要给一份残缺的卷子
+    if (questions.some((q) => !q)) {
+      clearSavedExam()
+      wx.showModal({
+        title: '无法继续',
+        content: '题库已更新，上次的试卷找不全了，请重新开始考试。',
+        showCancel: false
+      })
+      return
+    }
+
+    const currentIndex = Math.min(
+      Math.max(saved.currentIndex || 0, 0),
+      questions.length - 1
+    )
+
+    this.beginExam({
+      questions,
+      answers: saved.answers || {},
+      marked: new Set(saved.marked || []),
+      currentIndex,
+      endTime: saved.endTime
+    })
+    wx.showToast({ title: '已从上次进度继续', icon: 'none' })
+  },
+
+  /** 开考与续考共用：写入状态、建题号面板、存档、起计时器 */
+  beginExam({ questions, answers, marked, currentIndex, endTime }) {
+    const q = questions[currentIndex]
+    const answerKeys = answers[q.id] || []
+    const remaining = Math.max(0, endTime - Date.now())
 
     this.setData({
       examStarted: true,
       examFinished: false,
-      questions: examQuestions,
-      currentIndex: 0,
-      currentQuestion: examQuestions[0],
-      answers: {},
-      marked: new Set(),
-      answerKeys: [],
-      renderOptions: this.buildRenderOptions(examQuestions[0], []),
+      questions,
+      currentIndex,
+      currentQuestion: q,
+      answers,
+      marked,
+      answerKeys,
+      renderOptions: this.buildRenderOptions(q, answerKeys),
       endTime,
-      timerDisplay: this.formatTime(EXAM_DURATION),
-      timerUrgent: false,
-      typeLabel: getTypeLabel(examQuestions[0].type),
-      questionGroups: groups,
+      timerDisplay: this.formatTime(remaining),
+      timerUrgent: remaining < 5 * 60 * 1000,
+      isMarked: marked.has(q.id),
+      typeLabel: getTypeLabel(q.type),
+      questionGroups: this.buildGroups(questions),
       examResult: null
     })
-    // 题号面板的初始状态（第 1 格 = current）
+    // 题号面板的初始状态
     this.syncNavCls()
 
-    // 保存考试状态（可恢复）
+    // 存档，供中途退出后恢复
     this.saveExamState()
 
     // 启动计时器
@@ -278,11 +387,6 @@ Page({
 
   toggleNavigator() {
     this.setData({ navigatorOpen: !this.data.navigatorOpen })
-  },
-
-  saveProgress() {
-    this.saveExamState()
-    wx.showToast({ title: '进度已保存', icon: 'success' })
   },
 
   saveExamState() {

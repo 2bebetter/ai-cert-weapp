@@ -65,7 +65,6 @@
 
       <view class="exam-nav">
         <button class="btn btn-ghost" bindtap="prevQuestion" disabled="{{currentIndex <= 0}}">上一题</button>
-        <button class="btn btn-secondary" bindtap="saveProgress">保存进度</button>
         <button class="btn btn-primary" bindtap="nextQuestion" disabled="{{currentIndex >= questions.length - 1}}">下一题</button>
       </view>
     </scroll-view>
