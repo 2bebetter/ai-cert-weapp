@@ -399,4 +399,103 @@ export function gradeByScorePoints(blankStatusMap = {}, questionId) {
   }
 }
 
+/**
+ * 把题干长文本拆成 4 个固定小节
+ *   背景简介 / 任务要求 / 数据集字段说明 / 输出与保存要求
+ * @param {String} text 原始题干
+ * @returns {Object|null} { background, tasks:[{num,text}], fields, output }
+ */
+export function parseQuestionSections(text) {
+  const t = String(text || '').replace(/\r/g, ' ').trim()
+  if (!t) return null
+
+  // 任务要求：（1）…（2）…，兜底 1、2、3、
+  const tasks = []
+  const collect = (re) => {
+    let m
+    while ((m = re.exec(t)) !== null) {
+      const body = m[2].trim()
+      if (body.length > 4) tasks.push({ num: Number(m[1]), text: body })
+    }
+  }
+  collect(/[（(](\d{1,2})[）)]([\s\S]*?)(?=[（(]\d{1,2}[）)]|$)/g)
+  if (!tasks.length) {
+    collect(/(?:^|[\s　])(\d{1,2})[、．]\s*([\s\S]*?)(?=(?:^|[\s　])\d{1,2}[、．]|$)/gm)
+  }
+  const firstTaskAt = tasks.length
+    ? (t.search(/[（(]\d{1,2}[）)]/) >= 0
+      ? t.search(/[（(]\d{1,2}[）)]/)
+      : t.search(/(?:^|[\s　])\d{1,2}[、．]/))
+    : -1
+
+  // 数据集字段说明
+  const fm = t.match(/([^。]*?包含以下字段[：:][\s\S]*?)(?=你作为|请完成|根据提供的|$)/)
+  const fields = fm ? fm[1].trim() : ''
+
+  // 背景简介
+  const introAt = ['你作为', '请完成以下', '根据提供的数据集', '根据提供的']
+    .map((k) => t.indexOf(k)).filter((i) => i > 0)
+  const fieldsAt = fields ? t.indexOf(fields.slice(0, 10)) : -1
+  const ends = [fieldsAt, firstTaskAt, introAt.length ? Math.min(...introAt) : -1].filter((i) => i > 0)
+  const background = t.slice(0, ends.length ? Math.min(...ends) : t.length).trim().replace(/[：:]\s*$/, '')
+
+  // 输出与保存要求：全文里含命名 / 保存规则的分句
+  const out = []
+  const seen = new Set()
+  const KEY = /命名为|保存为|以文件名|文件夹命名|所有结果文件|保存到考生文件夹|文件命名|格式保存/
+  for (const s of t.split(/[。；]/)) {
+    const s2 = s.trim()
+    if (!s2 || !KEY.test(s2)) continue
+    const clauses = s2.split('，')
+    const ki = clauses.findIndex((c) => KEY.test(c))
+    const clean = (ki >= 0 ? clauses.slice(ki) : clauses).join('，')
+      .replace(/^[\s（(]*\d{1,2}[）)]\s*/, '')
+      .replace(/^通过[^，]*，/, '')
+      .trim()
+    if (clean && !seen.has(clean)) { seen.add(clean); out.push(`${clean}。`) }
+  }
+
+  return { background, tasks, fields, output: out.join('\n') }
+}
+
+/**
+ * 把文本切成 [{ code, v }] 片段：文件名 / 文件夹名 / 字段名用等宽高亮
+ * @param {String} text
+ * @returns {Array<{code:Boolean,v:String}>}
+ */
+const HL_RE = /(?:[\w\u4e00-\u9fa5.\-]*\.(?:csv|xlsx|xls|ipynb|pkl|txt|docx|doc|html|json|png|jpg|jpeg|onnx))|(?:[A-Za-z_][A-Za-z0-9_]{2,}(?=[：:]\s*[\u4e00-\u9fa5]))/g
+
+export function splitHighlight(text) {
+  const t = String(text || '')
+  if (!t) return []
+  const parts = []
+  let last = 0
+  HL_RE.lastIndex = 0
+  let m
+  while ((m = HL_RE.exec(t)) !== null) {
+    if (m.index > last) parts.push({ code: false, v: t.slice(last, m.index) })
+    parts.push({ code: true, v: m[0] })
+    last = m.index + m[0].length
+  }
+  if (last < t.length) parts.push({ code: false, v: t.slice(last) })
+  return parts
+}
+
+/** 把含 `反引号` 的文本切成 [{ code, v }]，反引号内容渲染为代码片段 */
+export function splitInlineCode(text) {
+  const t = String(text || '')
+  if (!t) return []
+  const parts = []
+  let last = 0
+  const re = /`([^`]+)`/g
+  let m
+  while ((m = re.exec(t)) !== null) {
+    if (m.index > last) parts.push({ code: false, v: t.slice(last, m.index) })
+    parts.push({ code: true, v: m[1] })
+    last = m.index + m[0].length
+  }
+  if (last < t.length) parts.push({ code: false, v: t.slice(last) })
+  return parts
+}
+
 export { extractKeywords, PY_API }

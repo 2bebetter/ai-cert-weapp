@@ -655,8 +655,10 @@ const GENERIC_MISTAKES = [
  */
 export function mistakesFor(api) {
   const specific = (api && MISTAKE_GUIDE[api]) || []
-  const merged = [...specific, ...GENERIC_MISTAKES]
-  return merged.slice(0, 3).join('；')
+  // 有针对性错误点 → 用针对性的；否则用通用项；都没有则返回空（弹窗显示固定文案）
+  const list = specific.length ? specific : (api ? GENERIC_MISTAKES : [])
+  const seen = new Set()
+  return list.filter((s) => s && !seen.has(s) && seen.add(s)).slice(0, 3).join('；')
 }
 
 /** 关键字参数说明（答案形如 `test_size=0.2` 时用） */

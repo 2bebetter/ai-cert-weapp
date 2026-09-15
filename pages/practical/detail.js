@@ -1,6 +1,10 @@
 import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
-import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswers, extractKeywords, gradeByScorePoints } from '../../utils/domain'
+import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswers, extractKeywords, gradeByScorePoints, parseQuestionSections, splitHighlight, splitInlineCode } from '../../utils/domain'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
+
+const UI_STATE_KEY = 'practical_ui_state'
+
+const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
 
 Page({
   data: {
@@ -18,8 +22,11 @@ Page({
     blankAnswerMap: {},  // { blankId: '标准答案文本' }
     verified: false,       // 是否已验证
     currentAnalysis: null, // { blankId, hint, reference, explanation, commonMistake, contrast }
-    // 评分标准折叠
-    criteriaOpen: false,
+    // 题干 / 评分标准 的展开状态（本地保留，不随弹窗、验证答案重置）
+    qSections: null,      // { background, tasks, fields, output }
+    questionOpen: false,  // 题干默认收起，只显示背景简述 + 前 3 条任务
+    criteriaOpen: true,   // 评分标准默认展开
+    hasMoreTasks: false,
     hasContent: false,
     gradeResult: null,
     debugInfo: ''
@@ -80,7 +87,7 @@ Page({
       title: (q.title || q.question?.split('：')[0] || '未命名任务').trim(),
       question: q.question || '请按题目要求完成本任务。',
       type,
-      scoreItems: q.score_items || [],
+      scoreItems: (q.score_items || []).map((it, i) => ({ ...it, mark: CIRCLED[i] || String(i + 1) })),
       maxScore: q.score_total || (q.score_items || []).reduce((s, i) => s + Number(i.score), 0)
     }
 
@@ -121,10 +128,28 @@ Page({
       docAnswer = saved?.docText || ''
     }
 
+    // 展开 / 收起状态本地保留（按题目 id 存）
+    const uiSaved = (wx.getStorageSync(UI_STATE_KEY) || {})[this.questionId] || {}
+    const uiState = {
+      questionOpen: !!uiSaved.questionOpen,
+      criteriaOpen: uiSaved.criteriaOpen === undefined ? true : !!uiSaved.criteriaOpen
+    }
+
+    const qSections = parseQuestionSections(q.question || '')
+    if (qSections) {
+      qSections.bgParts = splitHighlight(qSections.background)
+      qSections.fieldParts = splitHighlight(qSections.fields)
+      qSections.outputParts = splitHighlight(qSections.output)
+      qSections.tasks = qSections.tasks.map((t) => ({ ...t, parts: splitHighlight(t.text) }))
+    }
     this.setData({
       loading: false,
       loadError: false,
       task,
+      qSections,
+      questionOpen: uiState.questionOpen,
+      criteriaOpen: uiState.criteriaOpen,
+      hasMoreTasks: !!(qSections && qSections.tasks.length > 3),
       codeLines,
       blankValues,
       blankAnswers,
@@ -230,6 +255,27 @@ Page({
 
   toggleCriteria() {
     this.setData({ criteriaOpen: !this.data.criteriaOpen })
+    this.persistUiState()
+  },
+
+  /** 题干卡片展开 / 收起（状态本地保留） */
+  toggleQuestion() {
+    this.setData({ questionOpen: !this.data.questionOpen })
+    this.persistUiState()
+  },
+
+  /** 把展开 / 收起状态写到本地，重进页面仍保持 */
+  persistUiState() {
+    try {
+      const all = wx.getStorageSync(UI_STATE_KEY) || {}
+      all[this.questionId] = {
+        questionOpen: this.data.questionOpen,
+        criteriaOpen: this.data.criteriaOpen
+      }
+      wx.setStorageSync(UI_STATE_KEY, all)
+    } catch (e) {
+      // 存储失败不影响交互
+    }
   },
 
   saveDraft() {
@@ -310,7 +356,13 @@ Page({
     const blankId = e.currentTarget.dataset.blankId
     const item = this.data.blankAnswers.find((ba) => ba.blankId === blankId)
     if (item) {
-      this.setData({ currentAnalysis: item })
+      this.setData({
+        currentAnalysis: {
+          ...item,
+          explParts: splitInlineCode(item.explanation),
+          mistakeParts: splitInlineCode(item.commonMistake)
+        }
+      })
     }
   },
 

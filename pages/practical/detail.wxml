@@ -7,47 +7,104 @@
 
   <!-- 加载失败 -->
   <view class="empty-state" wx:elif="{{loadError}}">
-    <text>😵</text>
-    <text>题库加载失败</text>
+    <text class="empty-title">题库加载失败</text>
     <text class="placeholder" wx:if="{{debugInfo}}">{{debugInfo}}</text>
     <text class="placeholder" wx:else>请确认 getQuestions 云函数已部署</text>
-    <button class="btn btn-primary" bindtap="retry" style="margin-top:16px">重试</button>
+    <button class="btn btn-primary" bindtap="retry">重试</button>
   </view>
 
-  <block wx:else>
-    <!-- 任务标题与描述 -->
-    <view class="task-header">
-      <view class="task-tags">
-        <text class="tag {{task.type === 'code' ? '' : 'tag-warning'}}">{{task.type === 'code' ? '代码填空' : '文档作答'}}</text>
-        <text class="tag tag-success">{{task.maxScore}} 分</text>
+  <view class="content" wx:else>
+    <!-- ═══════════ 1. 题干卡片 ═══════════ -->
+    <view class="card question-card">
+      <view class="card-head">
+        <view class="card-head-left">
+          <view class="icon-book"></view>
+          <text class="card-title">题目背景与任务要求</text>
+        </view>
+        <view class="toggle-btn" bindtap="toggleQuestion">
+          <text>{{questionOpen ? '收起' : '展开'}}</text>
+          <view class="chev {{questionOpen ? 'chev-up' : ''}}"></view>
+        </view>
       </view>
-      <text class="task-title">{{task.title}}</text>
-      <view class="task-question">
-        <text>{{task.question}}</text>
-      </view>
+
+      <view class="q-title">{{task.title}}</view>
+
+      <block wx:if="{{qSections}}">
+        <!-- ① 背景简介（收起时也显示） -->
+        <view class="qsec" wx:if="{{qSections.background}}">
+          <text class="qsec-label">题目背景</text>
+          <view class="qsec-text">
+            <text wx:for="{{qSections.bgParts}}" wx:key="index" class="{{item.code ? 'mono' : ''}}">{{item.v}}</text>
+          </view>
+        </view>
+
+        <!-- ② 任务要求：收起时只显示前 3 条 -->
+        <view class="qsec" wx:if="{{qSections.tasks.length}}">
+          <text class="qsec-label">任务要求</text>
+          <view class="task-list">
+            <view wx:for="{{qSections.tasks}}" wx:key="num" wx:if="{{questionOpen || index < 3}}" class="task-item">
+              <text class="task-num">{{item.num}}</text>
+              <view class="task-text">
+                <text wx:for="{{item.parts}}" wx:for-item="p" wx:key="index" class="{{p.code ? 'mono' : ''}}">{{p.v}}</text>
+              </view>
+            </view>
+          </view>
+          <view wx:if="{{!questionOpen && hasMoreTasks}}" class="more-hint" bindtap="toggleQuestion">
+            还有 {{qSections.tasks.length - 3}} 条任务，点击展开查看
+          </view>
+        </view>
+
+        <!-- ③ 数据集字段说明（收起时隐藏） -->
+        <view class="qsec" wx:if="{{questionOpen && qSections.fields}}">
+          <text class="qsec-label">数据集字段说明</text>
+          <view class="qsec-text mono-box">
+            <text wx:for="{{qSections.fieldParts}}" wx:key="index" class="{{item.code ? 'mono-hl' : ''}}">{{item.v}}</text>
+          </view>
+        </view>
+
+        <!-- ④ 输出与保存要求（收起时隐藏，浅黄提示底） -->
+        <view class="qsec" wx:if="{{questionOpen && qSections.output}}">
+          <text class="qsec-label">输出与保存要求</text>
+          <view class="warn-box">
+            <text wx:for="{{qSections.outputParts}}" wx:key="index" class="{{item.code ? 'mono-hl' : ''}}">{{item.v}}</text>
+          </view>
+        </view>
+      </block>
+
+      <!-- 兜底：题干无法结构化时直接显示原文 -->
+      <view class="qsec-text" wx:else>{{task.question}}</view>
     </view>
 
-    <!-- 评分标准（默认收起，可展开） -->
-    <view class="criteria-section" wx:if="{{task.scoreItems.length}}">
-      <view class="criteria-header" bindtap="toggleCriteria">
-        <text class="criteria-title">📋 评分标准（{{task.maxScore}} 分）</text>
-        <text class="criteria-arrow">{{criteriaOpen ? '▲' : '▼'}}</text>
+    <!-- ═══════════ 2. 评分标准 ═══════════ -->
+    <view class="card criteria-section" wx:if="{{task.scoreItems.length}}">
+      <view class="card-head" bindtap="toggleCriteria">
+        <view class="card-head-left">
+          <view class="icon-score"></view>
+          <text class="card-title">评分标准（{{task.maxScore}} 分）</text>
+        </view>
+        <view class="chev {{criteriaOpen ? 'chev-up' : ''}}"></view>
       </view>
       <view class="criteria-body" wx:if="{{criteriaOpen}}">
         <view wx:for="{{task.scoreItems}}" wx:key="id" class="criteria-item">
-          <text class="criteria-item-score">{{item.score}} 分</text>
-          <text class="criteria-item-desc">{{item.desc}}</text>
+          <text class="criteria-item-mark">{{item.mark}}</text>
+          <text class="criteria-item-desc">任务{{index + 1}}：{{item.desc}}</text>
+          <text class="criteria-item-score">{{item.score}}分</text>
         </view>
       </view>
     </view>
 
-    <!-- 作答区 -->
-    <view class="answer-section">
-      <text class="section-title">作答区</text>
+    <!-- ═══════════ 3. 代码作答区 ═══════════ -->
+    <view class="card answer-section">
+      <view class="card-head static">
+        <view class="card-head-left">
+          <view class="icon-code"></view>
+          <text class="card-title">代码作答区</text>
+        </view>
+        <text class="head-hint" wx:if="{{task.type === 'mixed'}}">代码部分</text>
+      </view>
 
-      <!-- 混合题：先代码，后文档 -->
-      <block wx:if="{{task.type === 'mixed'}}">
-        <text class="sub-section-title">📝 代码部分</text>
+      <!-- 纯代码题 / 混合题：代码编辑器 -->
+      <block wx:if="{{task.type === 'code' || task.type === 'mixed'}}">
         <block wx:if="{{codeLines.length}}">
           <scroll-view class="code-scroll" scroll-y scroll-x enhanced show-scrollbar="{{true}}">
             <view class="code-editor">
@@ -68,54 +125,7 @@
                       data-blank-id="{{part.id}}"
                       catchtap="openBlankAnalysis">
                       <text class="blank-user-value">{{blankStatusMap[part.id] === 'empty' ? '未填' : blankValues[part.id]}}</text>
-                      <text wx:if="{{blankStatusMap[part.id] === 'correct'}}" class="blank-ref-line blank-ref-ok">✓ 正确</text>
-                      <text wx:else class="blank-ref-line"><text class="blank-ref-tag">参考答案 </text>{{blankAnswerMap[part.id]}}</text>
-                    </view>
-                    <text wx:else class="code-text">{{part.value}}</text>
-                  </block>
-                </view>
-              </view>
-            </view>
-          </scroll-view>
-        </block>
-        <block wx:else>
-          <view class="no-template-tip">代码模板加载中，请先填写下方文档部分</view>
-        </block>
-
-        <text class="sub-section-title" style="margin-top:16px">📄 文档作答部分</text>
-        <textarea
-          class="doc-area"
-          value="{{docAnswer}}"
-          bindinput="onAnswerInput"
-          placeholder="在此填写文档/分析内容…"
-          maxlength="-1"
-          auto-height
-        ></textarea>
-      </block>
-
-      <!-- 纯代码题 -->
-      <block wx:elif="{{task.type === 'code'}}">
-        <block wx:if="{{codeLines.length}}">
-          <scroll-view class="code-scroll" scroll-y scroll-x enhanced show-scrollbar="{{true}}">
-            <view class="code-editor">
-              <view wx:for="{{codeLines}}" wx:for-item="line" wx:key="index" class="code-line">
-                <text class="line-num">{{index + 1}}</text>
-                <view class="line-content">
-                  <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
-                    <input wx:if="{{part.kind === 'blank' && !verified}}"
-                      class="code-blank"
-                      value="{{blankValues[part.id] || ''}}"
-                      data-blank-id="{{part.id}}"
-                      bindinput="onBlankInput"
-                      placeholder=""
-                      adjust-position="{{false}}"
-                    />
-                    <view wx:elif="{{part.kind === 'blank'}}"
-                      class="blank-result {{blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')}}"
-                      data-blank-id="{{part.id}}"
-                      catchtap="openBlankAnalysis">
-                      <text class="blank-user-value">{{blankStatusMap[part.id] === 'empty' ? '未填' : blankValues[part.id]}}</text>
-                      <text wx:if="{{blankStatusMap[part.id] === 'correct'}}" class="blank-ref-line blank-ref-ok">✓ 正确</text>
+                      <view wx:if="{{blankStatusMap[part.id] === 'correct'}}" class="blank-ref-line blank-ref-ok"><view class="icon-check"></view><text>正确</text></view>
                       <text wx:else class="blank-ref-line"><text class="blank-ref-tag">参考答案 </text>{{blankAnswerMap[part.id]}}</text>
                     </view>
                     <text wx:else class="code-text">{{part.value}}</text>
@@ -127,7 +137,7 @@
 
           <!-- 验证结果总分行 -->
           <view wx:if="{{verified}}" class="verify-summary {{gradeResult.total_score === gradeResult.autoMax ? 'summary-pass' : 'summary-fail'}}">
-            <text>{{gradeResult.total_score}} / {{gradeResult.autoMax}} 分</text>
+            <text class="summary-score">{{gradeResult.total_score}} / {{gradeResult.autoMax}} 分</text>
             <text class="summary-count">{{gradeResult.docMax ? '文档题 ' + gradeResult.docMax + ' 分需 AI 判题 · ' : ''}}点击填空查看解析</text>
           </view>
 
@@ -148,12 +158,17 @@
           </view>
         </block>
         <block wx:else>
-          <view class="no-template-tip">等待代码模板加载，你可以先在这里写代码</view>
+          <view class="no-template-tip">代码模板加载中…</view>
+        </block>
+
+        <!-- 混合题的文档作答部分 -->
+        <block wx:if="{{task.type === 'mixed'}}">
+          <text class="sub-section-title">文档作答部分</text>
           <textarea
-            class="code-area"
-            value="{{answer}}"
+            class="doc-area"
+            value="{{docAnswer}}"
             bindinput="onAnswerInput"
-            placeholder="在此写代码…import pandas as pd"
+            placeholder="在此填写文档、分析、报告内容…"
             maxlength="-1"
             auto-height
           ></textarea>
@@ -162,7 +177,6 @@
 
       <!-- 纯文档题 -->
       <block wx:else>
-        <!-- 多子问文档题 -->
         <block wx:if="{{docSections.length}}">
           <view wx:for="{{docSections}}" wx:key="key" class="doc-section">
             <text class="sub-section-title">第{{item.num}}问</text>
@@ -177,65 +191,78 @@
             ></textarea>
           </view>
         </block>
-        <!-- 单框文档题（4.x 大纲类） -->
-        <block wx:else>
-          <textarea
-            class="doc-area"
-            value="{{answer}}"
-            bindinput="onAnswerInput"
-            placeholder="在此填写作答内容…"
-            maxlength="-1"
-            auto-height
-          ></textarea>
-        </block>
+        <textarea
+          wx:else
+          class="doc-area"
+          value="{{answer}}"
+          bindinput="onAnswerInput"
+          placeholder="在此填写作答内容…"
+          maxlength="-1"
+          auto-height
+        ></textarea>
       </block>
-
-      <!-- 操作按钮 -->
-      <view class="actions">
-        <button class="btn btn-secondary" bindtap="saveDraft">保存草稿</button>
-        <button wx:if="{{task.type === 'code'}}" class="btn btn-primary" bindtap="verifyAnswers" disabled="{{!hasContent}}">
-          验证答案
-        </button>
-        <button wx:else class="btn btn-primary" bindtap="submitGrade" disabled="{{!hasContent}}">
-          ✅ 智能评测
-        </button>
-      </view>
-
-      <!-- 评分结果（混合题/文档题 AI 评测结果） -->
-      <view wx:if="{{gradeResult && task.type !== 'code'}}" class="grade-result {{gradeResult.error ? 'bad' : 'ok'}}">
-        <block wx:if="{{gradeResult.error}}">
-          <text class="grade-title">判分失败：{{gradeResult.error}}</text>
-        </block>
-        <block wx:else>
-          <text class="grade-title">
-            智能评测：{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分
-            <text class="grade-mode">{{gradeResult.mode === 'rule' ? '· 规则匹配' : '· AI'}}</text>
-          </text>
-          <view wx:for="{{gradeResult.items}}" wx:key="id" class="grade-item">
-            <text>{{item.id}}：{{item.score}} / {{item.max_score}} · {{item.reason}}</text>
-          </view>
-        </block>
-      </view>
     </view>
 
-    <!-- 逐空解析弹窗 -->
-    <view wx:if="{{currentAnalysis}}" class="analysis-overlay" catchtap="closeBlankAnalysis">
-      <view class="analysis-modal" catchtap="noop">
-        <view class="analysis-head">
-          <text class="analysis-title">解答解析</text>
-          <text class="analysis-close" catchtap="closeBlankAnalysis">✕</text>
+    <!-- ═══════════ 4. 底部操作栏 ═══════════ -->
+    <view class="action-bar">
+      <button class="btn btn-secondary" bindtap="saveDraft">保存草稿</button>
+      <button wx:if="{{task.type === 'code'}}" class="btn btn-primary" bindtap="verifyAnswers" disabled="{{!hasContent}}">
+        验证答案
+      </button>
+      <button wx:else class="btn btn-primary" bindtap="submitGrade" disabled="{{!hasContent}}">
+        智能评测
+      </button>
+    </view>
+
+    <!-- 评分结果（混合题 / 文档题 AI 评测） -->
+    <view wx:if="{{gradeResult && task.type !== 'code'}}" class="card grade-result {{gradeResult.error ? 'bad' : 'ok'}}">
+      <block wx:if="{{gradeResult.error}}">
+        <text class="grade-title">判分失败：{{gradeResult.error}}</text>
+      </block>
+      <block wx:else>
+        <text class="grade-title">
+          智能评测：{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分
+          <text class="grade-mode">{{gradeResult.mode === 'rule' ? '· 规则匹配' : '· AI'}}</text>
+        </text>
+        <view wx:for="{{gradeResult.items}}" wx:key="id" class="grade-item">
+          <text>{{item.id}}：{{item.score}} / {{item.max_score}} · {{item.reason}}</text>
         </view>
-        <scroll-view class="analysis-body" scroll-y enhanced show-scrollbar="{{true}}">
-          <view class="analysis-block">
-            <text class="analysis-label">① 功能解析</text>
-            <text class="analysis-text">{{currentAnalysis.explanation}}</text>
-          </view>
-          <view class="analysis-block">
-            <text class="analysis-label">② 常见错误点</text>
-            <text class="analysis-text">{{currentAnalysis.commonMistake}}</text>
-          </view>
-        </scroll-view>
-      </view>
+      </block>
     </view>
-  </block>
+  </view>
+
+  <!-- ═══════════ 逐空解析弹窗 ═══════════ -->
+  <view wx:if="{{currentAnalysis}}" class="analysis-overlay" catchtap="closeBlankAnalysis">
+    <view class="analysis-modal" catchtap="noop">
+      <view class="analysis-head">
+        <text class="analysis-title">解答解析</text>
+        <view class="analysis-close" catchtap="closeBlankAnalysis">
+          <view class="icon-close"></view>
+        </view>
+      </view>
+      <scroll-view class="analysis-body" scroll-y enhanced show-scrollbar="{{true}}">
+        <!-- ① 功能解析 -->
+        <view class="analysis-block">
+          <text class="analysis-label">① 功能解析</text>
+          <view class="analysis-text">
+            <block wx:for="{{currentAnalysis.explParts}}" wx:key="index">
+              <text wx:if="{{item.code}}" class="inline-code">{{item.v}}</text>
+              <text wx:else>{{item.v}}</text>
+            </block>
+          </view>
+        </view>
+        <!-- ② 常见错误点（板块常驻，无内容时给固定文案，避免布局跳动） -->
+        <view class="analysis-block">
+          <text class="analysis-label">② 常见错误点</text>
+          <view class="analysis-text" wx:if="{{currentAnalysis.mistakeParts.length}}">
+            <block wx:for="{{currentAnalysis.mistakeParts}}" wx:key="index">
+              <text wx:if="{{item.code}}" class="inline-code">{{item.v}}</text>
+              <text wx:else>{{item.v}}</text>
+            </block>
+          </view>
+          <view class="analysis-text analysis-none" wx:else>本空无典型高频错误</view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 </view>
