@@ -15,7 +15,9 @@ Page({
     blankValues: {},
     blankAnswers: [],     // 逐空参考答案与解析 [{ blankId, hint, status, userValue, ... }]
     blankStatusMap: {},  // { blankId: 'correct'|'wrong'|'empty' }
+    blankAnswerMap: {},  // { blankId: '标准答案文本' }
     verified: false,       // 是否已验证
+    currentAnalysis: null, // { blankId, hint, reference, explanation, commonMistake, contrast }
     // 评分标准折叠
     criteriaOpen: false,
     hasContent: false,
@@ -271,27 +273,37 @@ Page({
 
     // 构建逐空状态映射 { blankId: 'correct'|'wrong'|'empty' }
     const blankStatusMap = {}
+    const blankAnswerMap = {}
     for (const ba of blankAnswers) {
       blankStatusMap[ba.blankId] = ba.status
+      blankAnswerMap[ba.blankId] = ba.reference
     }
 
     this.setData({
       gradeResult: { total_score: result.total_score, maxScore: result.maxScore, items: result.items, mode: 'rule' },
       blankAnswers,
       blankStatusMap,
-      verified: true
+      blankAnswerMap,
+      verified: true,
+      currentAnalysis: null
     })
   },
 
-  /** 切换单个空答案解析面板 */
-  toggleBlankAnswer(e) {
-    const idx = e.currentTarget.dataset.index
-    const list = [...this.data.blankAnswers]
-    if (list[idx]) {
-      list[idx] = { ...list[idx], open: !list[idx].open }
-      this.setData({ blankAnswers: list })
+  /** 点击标准答案 → 打开解析弹窗 */
+  openBlankAnalysis(e) {
+    const blankId = e.currentTarget.dataset.blankId
+    const item = this.data.blankAnswers.find((ba) => ba.blankId === blankId)
+    if (item) {
+      this.setData({ currentAnalysis: item })
     }
   },
+
+  /** 关闭解析弹窗 */
+  closeBlankAnalysis() {
+    this.setData({ currentAnalysis: null })
+  },
+
+  noop() {},
 
   /** 混合题/文档题 AI 评测 */
   async submitGrade() {

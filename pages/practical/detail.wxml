@@ -55,14 +55,23 @@
                 <text class="line-num">{{index + 1}}</text>
                 <view class="line-content">
                   <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
-                    <input wx:if="{{part.kind === 'blank'}}"
-                      class="code-blank {{verified ? (blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')) : ''}}"
+                    <input wx:if="{{part.kind === 'blank' && !verified}}"
+                      class="code-blank"
                       value="{{blankValues[part.id] || ''}}"
                       data-blank-id="{{part.id}}"
                       bindinput="onBlankInput"
                       placeholder=""
                       adjust-position="{{false}}"
                     />
+                    <view wx:elif="{{part.kind === 'blank'}}"
+                      class="blank-result {{blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')}}">
+                      <text class="blank-user-value {{blankStatusMap[part.id] === 'empty' ? 'value-empty' : ''}}">
+                        {{blankValues[part.id] || '未填'}}
+                      </text>
+                      <text class="blank-ref-value" data-blank-id="{{part.id}}" catchtap="openBlankAnalysis">
+                        {{blankAnswerMap[part.id] || ''}}
+                      </text>
+                    </view>
                     <text wx:else class="code-text">{{part.value}}</text>
                   </block>
                 </view>
@@ -94,14 +103,23 @@
                 <text class="line-num">{{index + 1}}</text>
                 <view class="line-content">
                   <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
-                    <input wx:if="{{part.kind === 'blank'}}"
-                      class="code-blank {{verified ? (blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')) : ''}}"
+                    <input wx:if="{{part.kind === 'blank' && !verified}}"
+                      class="code-blank"
                       value="{{blankValues[part.id] || ''}}"
                       data-blank-id="{{part.id}}"
                       bindinput="onBlankInput"
                       placeholder=""
                       adjust-position="{{false}}"
                     />
+                    <view wx:elif="{{part.kind === 'blank'}}"
+                      class="blank-result {{blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')}}">
+                      <text class="blank-user-value {{blankStatusMap[part.id] === 'empty' ? 'value-empty' : ''}}">
+                        {{blankValues[part.id] || '未填'}}
+                      </text>
+                      <text class="blank-ref-value" data-blank-id="{{part.id}}" catchtap="openBlankAnalysis">
+                        {{blankAnswerMap[part.id] || ''}}
+                      </text>
+                    </view>
                     <text wx:else class="code-text">{{part.value}}</text>
                   </block>
                 </view>
@@ -109,39 +127,10 @@
             </view>
           </scroll-view>
 
-          <!-- 逐空参考答案列表（验证后展示） -->
-          <view wx:if="{{verified && blankAnswers.length}}" class="blank-answers">
-            <text class="section-title" style="margin-top:16px">✅ 逐空解析 <text class="grade-mode">· 总分 {{gradeResult.total_score}} / {{gradeResult.maxScore}}</text></text>
-            <view wx:for="{{blankAnswers}}" wx:key="blankId" class="blank-answer-item" data-index="{{index}}" bindtap="toggleBlankAnswer">
-              <view class="blank-answer-header">
-                <text class="blank-answer-num">填空 {{index + 1}}</text>
-                <text class="blank-answer-status {{item.status === 'correct' ? 'status-ok' : 'status-bad'}}">
-                  {{item.status === 'correct' ? '✓ 正确' : (item.status === 'empty' ? '✗ 未作答' : '✗ 有误')}}
-                </text>
-                <text class="blank-answer-arrow">{{item.open ? '▲' : '▼'}}</text>
-              </view>
-              <text class="blank-answer-hint">{{item.hint}}</text>
-
-              <!-- 展开的解析面板 -->
-              <view wx:if="{{item.open}}" class="blank-analysis">
-                <view class="analysis-block">
-                  <text class="analysis-label">① 本空参考答案</text>
-                  <text class="analysis-text">{{item.reference}}</text>
-                </view>
-                <view class="analysis-block">
-                  <text class="analysis-label">② 代码功能解析</text>
-                  <text class="analysis-text">{{item.explanation}}</text>
-                </view>
-                <view class="analysis-block">
-                  <text class="analysis-label">③ 常见错误点</text>
-                  <text class="analysis-text">{{item.commonMistake}}</text>
-                </view>
-                <view class="analysis-block">
-                  <text class="analysis-label">④ 对比示例</text>
-                  <text class="analysis-text">{{item.contrast}}</text>
-                </view>
-              </view>
-            </view>
+          <!-- 验证结果总分行 -->
+          <view wx:if="{{verified}}" class="verify-summary {{gradeResult.total_score === gradeResult.maxScore ? 'summary-pass' : 'summary-fail'}}">
+            <text>{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分</text>
+            <text class="summary-count">点击标准答案查看解析</text>
           </view>
         </block>
         <block wx:else>
@@ -212,6 +201,34 @@
             <text>{{item.id}}：{{item.score}} / {{item.max_score}} · {{item.reason}}</text>
           </view>
         </block>
+      </view>
+    </view>
+
+    <!-- 逐空解析弹窗 -->
+    <view wx:if="{{currentAnalysis}}" class="analysis-overlay" catchtap="closeBlankAnalysis">
+      <view class="analysis-modal" catchtap="noop">
+        <view class="analysis-head">
+          <text class="analysis-title">解答解析</text>
+          <text class="analysis-close" catchtap="closeBlankAnalysis">✕</text>
+        </view>
+        <scroll-view class="analysis-body" scroll-y>
+          <view class="analysis-block">
+            <text class="analysis-label">① 本空参考答案</text>
+            <text class="analysis-answer">{{currentAnalysis.reference}}</text>
+          </view>
+          <view class="analysis-block">
+            <text class="analysis-label">② 功能解析</text>
+            <text class="analysis-text">{{currentAnalysis.explanation}}</text>
+          </view>
+          <view class="analysis-block">
+            <text class="analysis-label">③ 常见错误点</text>
+            <text class="analysis-text">{{currentAnalysis.commonMistake}}</text>
+          </view>
+          <view class="analysis-block">
+            <text class="analysis-label">④ 对错对比</text>
+            <text class="analysis-text">{{currentAnalysis.contrast}}</text>
+          </view>
+        </scroll-view>
       </view>
     </view>
   </block>
