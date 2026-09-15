@@ -466,7 +466,7 @@ Page({
         if (!config.apiKey) {
           wx.showModal({
             title: '未配置 API Key',
-            content: '文档部分需要 AI 评测，请先到"我的"页面配置 API Key。',
+            content: '文档部分需要 AI 评测，请先到"设置"页面配置 API Key。',
             confirmText: '去配置',
             success: (r) => { if (r.confirm) wx.switchTab({ url: '/pages/settings/settings' }) }
           })
@@ -518,7 +518,7 @@ Page({
     if (!config.apiKey) {
       wx.showModal({
         title: '未配置 API Key',
-        content: '请先到"我的"页面配置 API Key，才能使用 AI 评测。',
+        content: '请先到"设置"页面配置 API Key，才能使用 AI 评测。',
         confirmText: '去配置',
         success: (r) => { if (r.confirm) wx.switchTab({ url: '/pages/settings/settings' }) }
       })
