@@ -78,6 +78,13 @@
     <!-- 题号面板 -->
     <view class="exam-overlay {{navigatorOpen ? '' : 'hidden'}}" bindtap="toggleNavigator">
       <view class="exam-navigator" catchtap="">
+        <!-- 图例：说明四种状态的含义 -->
+        <view class="nav-legend">
+          <view class="legend-item"><view class="legend-box"></view><text>未作答</text></view>
+          <view class="legend-item"><view class="legend-box done"></view><text>已作答</text></view>
+          <view class="legend-item"><view class="legend-box cur"></view><text>当前题</text></view>
+          <view class="legend-item"><view class="legend-box mark"></view><text>已标记</text></view>
+        </view>
         <scroll-view scroll-y class="navigator-scroll">
           <view wx:for="{{questionGroups}}" wx:key="type" wx:for-item="group" class="nav-group">
             <text class="nav-group-title">{{groupLabel(group.type)}} ({{group.indexes.length}})</text>

@@ -153,6 +153,8 @@
   gap: 4px;
 }
 .nav-num {
+  position: relative;
+  overflow: hidden;
   text-align: center;
   padding: 6px 0;
   border-radius: 4px;
@@ -160,9 +162,77 @@
   background: var(--bg);
   color: var(--text-2);
 }
-.nav-num.answered { background: var(--primary-light); color: var(--primary); }
-.nav-num.current { background: var(--primary); color: #fff; }
-.nav-num.marked::after { content: '★'; font-size: 8px; color: #f5c518; margin-left: 1px; }
+/* 已作答：实心填充。
+   原来只把底色换成浅蓝(--primary-light)，与未作答的浅灰底
+   实测 ΔE 仅 7.0（<10 需凑近分辨），扫一眼分不出来。
+   改为实心蓝 + 白字后差异一目了然，白字对比度 5.77:1。 */
+.nav-num.answered {
+  background: #0b63c9;
+  color: #ffffff;
+  font-weight: 600;
+}
+/* 当前题：用外环表示，不用填充。
+   这样「位置」和「是否作答」是两个独立通道，可以叠加。
+   环色用深色 #1d1d1f 一种即可：外环画在格子外框之外，落在
+   白色面板上，与面板对比 15.9:1，无论格子自身是灰底还是
+   蓝底都清晰。
+   注意不要用白环——面板背景就是白色，白环在白底上等于没画，
+   实测「当前题+已作答」与「普通已作答」的差异为 0。 */
+.nav-num.current { box-shadow: 0 0 0 2px #1d1d1f; }
+/* 标记：右上角三角。
+   原来是在数字后追加一个 8px 的 ★(#f5c518)，在浅灰底上对比度
+   仅 1.50:1、在浅蓝底上 1.42:1（图形元素需 ≥3:1），等于没画。
+   改为角标后，三角下垫一层白色三角做分离边：因为单一颜色不可能
+   同时在浅灰底(需亮度≤0.27)和实心蓝底(需亮度≥0.49)上达到 3:1，
+   加白边后只需在浅灰和白色上都达标，实测 3.29:1 / 3.58:1。 */
+.nav-num.marked::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  border-top: 11px solid #ffffff;
+  border-left: 11px solid transparent;
+}
+.nav-num.marked::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  border-top: 8px solid #e8590c;
+  border-left: 8px solid transparent;
+}
+
+/* ── 图例：四个状态的含义 ── */
+.nav-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-3);
+}
+.legend-box {
+  position: relative;
+  overflow: hidden;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--bg);
+}
+.legend-box.done { background: #0b63c9; }
+.legend-box.cur { box-shadow: 0 0 0 2px #1d1d1f; }
+.legend-box.mark::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  border-top: 9px solid #e8590c;
+  border-left: 9px solid transparent;
+}
 
 /* 结果页 */
 .result-page { padding: 24px 16px; }
