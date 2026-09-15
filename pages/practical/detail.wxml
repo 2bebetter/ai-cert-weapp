@@ -64,13 +64,12 @@
                       adjust-position="{{false}}"
                     />
                     <view wx:elif="{{part.kind === 'blank'}}"
-                      class="blank-result {{blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')}}">
-                      <text class="blank-user-value {{blankStatusMap[part.id] === 'empty' ? 'value-empty' : ''}}">
-                        {{blankValues[part.id] || '未填'}}
-                      </text>
-                      <text class="blank-ref-value" data-blank-id="{{part.id}}" catchtap="openBlankAnalysis">
-                        {{blankAnswerMap[part.id] || ''}}
-                      </text>
+                      class="blank-result {{blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')}}"
+                      data-blank-id="{{part.id}}"
+                      catchtap="openBlankAnalysis">
+                      <text class="blank-user-value">{{blankStatusMap[part.id] === 'empty' ? '未填' : blankValues[part.id]}}</text>
+                      <text wx:if="{{blankStatusMap[part.id] === 'correct'}}" class="blank-ref-line blank-ref-ok">✓ 正确</text>
+                      <text wx:else class="blank-ref-line"><text class="blank-ref-tag">参考答案 </text>{{blankAnswerMap[part.id]}}</text>
                     </view>
                     <text wx:else class="code-text">{{part.value}}</text>
                   </block>
@@ -112,13 +111,12 @@
                       adjust-position="{{false}}"
                     />
                     <view wx:elif="{{part.kind === 'blank'}}"
-                      class="blank-result {{blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')}}">
-                      <text class="blank-user-value {{blankStatusMap[part.id] === 'empty' ? 'value-empty' : ''}}">
-                        {{blankValues[part.id] || '未填'}}
-                      </text>
-                      <text class="blank-ref-value" data-blank-id="{{part.id}}" catchtap="openBlankAnalysis">
-                        {{blankAnswerMap[part.id] || ''}}
-                      </text>
+                      class="blank-result {{blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')}}"
+                      data-blank-id="{{part.id}}"
+                      catchtap="openBlankAnalysis">
+                      <text class="blank-user-value">{{blankStatusMap[part.id] === 'empty' ? '未填' : blankValues[part.id]}}</text>
+                      <text wx:if="{{blankStatusMap[part.id] === 'correct'}}" class="blank-ref-line blank-ref-ok">✓ 正确</text>
+                      <text wx:else class="blank-ref-line"><text class="blank-ref-tag">参考答案 </text>{{blankAnswerMap[part.id]}}</text>
                     </view>
                     <text wx:else class="code-text">{{part.value}}</text>
                   </block>
@@ -130,7 +128,7 @@
           <!-- 验证结果总分行 -->
           <view wx:if="{{verified}}" class="verify-summary {{gradeResult.total_score === gradeResult.maxScore ? 'summary-pass' : 'summary-fail'}}">
             <text>{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分</text>
-            <text class="summary-count">点击标准答案查看解析</text>
+            <text class="summary-count">点击填空查看解析</text>
           </view>
         </block>
         <block wx:else>

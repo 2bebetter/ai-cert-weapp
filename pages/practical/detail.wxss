@@ -122,49 +122,48 @@
   box-sizing: border-box;
 }
 
-/* 验证后填空结果（行内容器 + 右下角答案标签） */
+/* 验证后填空结果（两行紧凑：上行作答 / 下行参考答案）
+   总高 = 1边框 + 16上行 + 13下行 + 1边框 = 31px，字号沿用代码 12px */
 .blank-result {
   display: inline-block;
-  position: relative;
   min-width: 80px;
-  height: 22px;
-  line-height: 20px;
-  padding: 1px 22px 1px 6px;
-  border: 2px solid #45475a;
+  padding: 0 7px;
+  border: 1px solid #45475a;
   border-radius: 4px;
   box-sizing: border-box;
-  font-size: 12px;
-  color: #cdd6f4;
   vertical-align: baseline;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .blank-result.blank-correct { border-color: #4ade80; background: #1a3a2a; }
-.blank-result.blank-wrong  { border-color: #f87171; background: #3a1a1a; }
-.blank-result.blank-empty  { border-color: #fbbf24; background: #3a3010; }
+.blank-result.blank-wrong   { border-color: #f87171; background: #3a1a1a; }
+.blank-result.blank-empty   { border-color: #f87171; background: #3a1a1a; }
+
+/* 上行：用户作答 */
 .blank-user-value {
-  display: inline;
+  display: block;
   font-size: 12px;
-  line-height: 20px;
+  line-height: 16px;
   color: #cdd6f4;
 }
-.blank-user-value.value-empty { color: #f87171; font-weight: 500; }
-.blank-ref-value {
-  position: absolute;
-  bottom: -1px;
-  right: 3px;
-  font-size: 8px;
-  line-height: 1;
-  color: #6c7086;
-  padding: 0 2px;
-  background: inherit;
-  border-radius: 2px;
-  z-index: 2;
+.blank-result.blank-wrong .blank-user-value {
+  color: #f87171;
+  text-decoration: line-through;
 }
-.blank-result.blank-correct .blank-ref-value { color: #a6e3a1; }
-.blank-result.blank-wrong .blank-ref-value  { color: #f9c2c2; }
-.blank-result.blank-empty .blank-ref-value  { color: #fde68a; }
+.blank-result.blank-empty .blank-user-value {
+  color: #f87171;
+  font-weight: 600;
+}
+.blank-result.blank-correct .blank-user-value { color: #86efac; }
+
+/* 下行：参考答案 / ✓ 正确 */
+.blank-ref-line {
+  display: block;
+  font-size: 10px;
+  line-height: 13px;
+  color: #a6e3a1;
+}
+.blank-ref-tag { color: #8e8e93; }
+.blank-ref-ok { color: #86efac; }
 
 /* 验证结果条 */
 .verify-summary {
