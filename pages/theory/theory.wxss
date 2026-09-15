@@ -14,6 +14,8 @@
 .filter-btn {
   display: flex;
   align-items: center;
+  min-height: 44px;
+  box-sizing: border-box;
   gap: 4px;
   padding: 4px 12px;
   border: 1px solid var(--border);
@@ -41,7 +43,7 @@
   margin-bottom: 12px;
 }
 .question-level {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-3);
   margin-right: auto;
 }
@@ -50,17 +52,16 @@
 .question-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
   margin-left: auto;
 }
 
 /* 矢量图标基类 */
 .head-icon {
   display: block;
-  width: 24px;
-  height: 24px;
-  padding: 4px;
-  box-sizing: content-box;
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
   background-size: 20px 20px;
   background-repeat: no-repeat;
   background-position: center;
@@ -69,7 +70,7 @@
 }
 .head-icon:active {
   opacity: 0.4;
-  background-color: rgba(0,0,0,0.04);
+  background-color: var(--shadow-sm);
 }
 
 /* Star 空心 */
@@ -128,8 +129,8 @@
   background: var(--primary-light);
 }
 .option.selected .option-label { color: var(--primary); font-weight: 500; }
-.option.correct { border-color: var(--success); background: #e8f8ee; }
-.option.wrong { border-color: var(--danger); background: #ffe8e6; }
+.option.correct { border-color: var(--success); background: var(--success-bg); }
+.option.wrong { border-color: var(--danger); background: var(--danger-bg); }
 
 .submit-btn { margin-top: 8px; }
 
@@ -138,8 +139,8 @@
   border-radius: var(--radius-sm);
   margin-top: 12px;
 }
-.feedback.ok { background: #e8f8ee; }
-.feedback.bad { background: #ffe8e6; }
+.feedback.ok { background: var(--success-bg); }
+.feedback.bad { background: var(--danger-bg); }
 .feedback-title {
   font-weight: 600;
   font-size: 14px;
@@ -163,13 +164,30 @@
 .overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4);
+  background: var(--overlay);
   z-index: 50;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.overlay.hidden { display: none; }
+.overlay {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
+}
+.overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.note-modal, .jump-modal {
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.overlay.hidden .note-modal,
+.overlay.hidden .jump-modal {
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+}
 .note-modal {
   background: var(--card-bg);
   border-radius: var(--radius);
@@ -207,28 +225,31 @@
   margin-left: auto;
   padding: 4px 10px;
   border-radius: 14px;
-  background: var(--primary-light, #eef2ff);
+  background: var(--primary-light, var(--primary-soft));
   font-size: 12px;
   line-height: 18px;
+  min-height: 44px;
+  box-sizing: border-box;
+  align-items: center;
 }
 
 .jump-cur {
   font-size: 13px;
   font-weight: 600;
-  color: var(--primary, #2563eb);
+  color: var(--primary, var(--primary-dark));
 }
 
 .jump-sep {
   font-size: 12px;
-  color: var(--text-3, #6b7280);
+  color: var(--text-3, var(--text-3));
 }
 
 .jump-go {
   margin-left: 2px;
   padding-left: 6px;
-  border-left: 1px solid var(--primary, #2563eb);
+  border-left: 1px solid var(--primary, var(--primary-dark));
   font-size: 12px;
-  color: var(--primary, #2563eb);
+  color: var(--primary, var(--primary-dark));
 }
 
 /* 恢复进度提示 */
@@ -236,8 +257,8 @@
   margin: 0 0 10px;
   padding: 8px 12px;
   border-radius: 8px;
-  background: var(--primary-light, #eef2ff);
-  color: var(--primary, #2563eb);
+  background: var(--primary-light, var(--primary-soft));
+  color: var(--primary, var(--primary-dark));
   font-size: 12px;
   line-height: 18px;
 }
@@ -249,14 +270,14 @@
   box-sizing: border-box;
   padding: 20px;
   border-radius: var(--radius, 12px);
-  background: var(--card-bg, #ffffff);
+  background: var(--card-bg, var(--card-bg));
 }
 
 .jump-title {
   display: block;
   font-size: 16px;
   font-weight: 600;
-  color: var(--text, #1f2937);
+  color: var(--text-1));
   margin-bottom: 14px;
 }
 
@@ -272,18 +293,18 @@
   height: 44px;
   box-sizing: border-box;
   padding: 0 12px;
-  border: 1px solid var(--border, #d7dce5);
+  border: 1px solid var(--border, var(--border-strong));
   border-radius: 8px;
-  background: var(--input-bg, #f8fafc);
+  background: var(--bg-soft));
   font-size: 16px;
-  color: var(--text, #1f2937);
+  color: var(--text-1));
   text-align: center;
 }
 
 .jump-total {
   flex-shrink: 0;
   font-size: 14px;
-  color: var(--text-3, #6b7280);
+  color: var(--text-3, var(--text-3));
 }
 
 .jump-quick {
@@ -294,10 +315,15 @@
 
 .jump-chip {
   flex: 1;
+  min-height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 9px 0;
   border-radius: 8px;
-  background: var(--bg-2, #f1f3f7);
-  color: var(--text-2, #4b5563);
+  background: var(--bg-soft));
+  color: var(--text-2, var(--text-2));
   font-size: 13px;
   text-align: center;
   line-height: 18px;

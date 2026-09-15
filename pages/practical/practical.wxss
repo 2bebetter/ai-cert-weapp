@@ -37,7 +37,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 14px;
   border-radius: 18px;
   background: var(--card-bg);
   border: 1px solid var(--border);
@@ -94,8 +96,8 @@
 
 /* ══════════ 推荐练习 ══════════ */
 .recommend-card {
-  background: linear-gradient(180deg, #f3f7ff 0%, #ffffff 100%);
-  border: 1px solid #e2ecff;
+  background: linear-gradient(180deg, var(--primary-soft) 0%, var(--card-bg) 100%);
+  border: 1px solid var(--primary-light);
 }
 
 .rec-list {
@@ -117,6 +119,10 @@
 .rec-main {
   flex: 1;
   min-width: 0;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .rec-name {
@@ -138,10 +144,10 @@
 
 .rec-btn {
   flex-shrink: 0;
-  padding: 8px 14px;
+  padding: 13px 16px;
   border-radius: 16px;
   background: var(--primary);
-  color: #ffffff;
+  color: var(--card-bg);
   font-size: 13px;
   line-height: 18px;
 }
@@ -198,6 +204,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
+  box-sizing: border-box;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   background: var(--card-bg);
@@ -239,6 +247,7 @@
 }
 
 .group-body {
+  animation: fade-in var(--dur) var(--ease);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -246,6 +255,8 @@
 
 /* ══════════ 题目卡片 ══════════ */
 .task-card {
+  min-height: 44px;
+  box-sizing: border-box;
   padding: 14px;
   border-radius: var(--radius-sm);
   background: var(--card-bg);
@@ -253,8 +264,10 @@
   box-sizing: border-box;
 }
 
+.task-card { transition: background var(--dur) var(--ease); }
+
 .task-card-hover {
-  background: #fafbfd;
+  background: var(--bg-soft);
 }
 
 .task-head {
@@ -287,25 +300,25 @@
   flex-shrink: 0;
   padding: 3px 9px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 16px;
   white-space: nowrap;
 }
 
 .badge-new {
-  background: #e8f0fe;
-  color: #007aff;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .badge-doing {
-  background: #fff4e0;
-  color: #ff9500;
+  background: var(--warning-bg);
+  color: var(--warning);
 }
 
 .badge-done {
-  background: #e8f8ee;
-  color: #34c759;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 /* ── 标签行 ── */
@@ -318,7 +331,7 @@
 }
 
 .task-variant {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-3);
   line-height: 16px;
   padding: 2px 7px;
@@ -339,8 +352,8 @@
   margin-top: 10px;
   padding: 7px 10px;
   border-radius: 6px;
-  background: #fff8ec;
-  color: #b86200;
+  background: var(--warning-bg);
+  color: var(--warning-text);
   font-size: 12px;
   line-height: 18px;
   word-break: break-word;
