@@ -92,7 +92,8 @@ Page({
       const segments = this.templates[this.questionId].segments || []
       if (saved?.blanks) blankValues = { ...saved.blanks }
       codeLines = this.splitSegmentsToLines(segments)
-      blankAnswers = buildBlankAnswers(segments, blankValues)
+      const refAns = this.templates[this.questionId].referenceAnswers || {}
+      blankAnswers = buildBlankAnswers(segments, blankValues, refAns)
     }
 
     // 文档部分：document 用 answer/sections，mixed 用 docAnswer
@@ -265,7 +266,8 @@ Page({
     const userCode = this.assembleCode()
     const result = gradeCodeTask(userCode, task.scoreItems)
     const blankValues = { ...this.data.blankValues }
-    const blankAnswers = buildBlankAnswers(segments, blankValues)
+    const refAns = this.templates?.[this.questionId]?.referenceAnswers || {}
+    const blankAnswers = buildBlankAnswers(segments, blankValues, refAns)
 
     // 构建逐空状态映射 { blankId: 'correct'|'wrong'|'empty' }
     const blankStatusMap = {}

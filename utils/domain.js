@@ -269,10 +269,11 @@ export function gradeCodeTask(userCode, scoreItems) {
 
 /**
  * 从模板 segments + 用户填空值构建逐空参考答案与判定
+ * 优先读 template.referenceAnswers，没有则从上下文推断
  * 返回 [{ blankId, hint, status, reference, explanation, commonMistake, contrast }]
  * status: 'correct' | 'wrong' | 'empty'
  */
-export function buildBlankAnswers(segments, blankValues = {}) {
+export function buildBlankAnswers(segments, blankValues = {}, referenceAnswers = {}) {
   if (!segments || !segments.length) return []
   const answers = []
   const ctx = { prevText: '' }
@@ -288,22 +289,30 @@ export function buildBlankAnswers(segments, blankValues = {}) {
         : '请参考上下文填写代码'
 
       const value = (blankValues[seg.id] || '').trim()
-      // 从 hint 提取期望关键词
-      const keywords = extractKeywords(hint)
+      // 逐空判定：有标准答案则精确匹配，否则按关键词匹配
+      const expected = referenceAnswers[seg.id]
       let status = 'empty'
       if (value) {
-        status = keywords.some((k) => value.toLowerCase().includes(String(k).toLowerCase())) ? 'correct' : 'wrong'
+        if (expected) {
+          status = value.toLowerCase().includes(expected.toLowerCase().replace(/\s+/g, '').substring(0, 10)) ? 'correct' : 'wrong'
+        } else {
+          const keywords = extractKeywords(hint)
+          status = keywords.some((k) => value.toLowerCase().includes(String(k).toLowerCase())) ? 'correct' : 'wrong'
+        }
       }
 
+      const reference = expected || hint
       answers.push({
         blankId: seg.id,
         hint,
         status,
         userValue: value,
-        reference: hint,          // 无标准答案时展示提示
+        reference,
         explanation: `本空需要填写实现「${hint}」的代码，注意函数调用语法与参数`,
         commonMistake: ['函数名拼写错误（s 结尾、大小写）', '缺少括号或引号', '参数顺序/列名拼写错'].join('；'),
-        contrast: '提示：该处为功能填空，参考上方代码模板中同位置的注释要求'
+        contrast: expected
+          ? `正确参考：${expected}`
+          : '提示：该处为功能填空，参考上方代码模板中同位置的注释要求'
       })
     }
   }
