@@ -233,22 +233,6 @@
   margin-bottom: 6px;
 }
 
-/* 你的作答 */
-.analysis-your-answer {
-  display: block;
-  font-family: 'Menlo', 'Consolas', monospace;
-  font-size: 13px;
-  background: #1e1e2e;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  line-height: 1.5;
-  color: #cdd6f4;
-  border-left: 3px solid #6c7086;
-}
-.analysis-your-answer.your-correct { border-left-color: #4ade80; }
-.analysis-your-answer.your-wrong { border-left-color: #f87171; }
-.analysis-your-answer.your-empty { color: #f87171; font-weight: 500; border-left-color: #fbbf24; }
-
 /* 参考答案（大字号 + 高亮） */
 .analysis-answer {
   display: block;
