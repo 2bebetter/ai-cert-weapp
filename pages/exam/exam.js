@@ -91,6 +91,8 @@ Page({
       questionGroups: groups,
       examResult: null
     })
+    // 题号面板的初始状态（第 1 格 = current）
+    this.syncNavCls()
 
     // 保存考试状态（可恢复）
     this.saveExamState()
@@ -127,7 +129,8 @@ Page({
       if (!groups[type]) {
         groups[type] = { type, indexes: [], counter: 1 }
       }
-      groups[type].indexes.push({ idx: i, num: groups[type].counter++ })
+      // cls 由 syncNavCls() 维护，不能留到 WXML 里算（见该方法注释）
+      groups[type].indexes.push({ idx: i, num: groups[type].counter++, cls: '' })
     })
     return Object.values(groups)
   },
@@ -152,6 +155,7 @@ Page({
     }
 
     this.setData({ answers, answerKeys: answers[q.id] || [] })
+    this.syncNavCls()
     this.syncRenderOptions()
     this.saveExamState()
   },
@@ -180,6 +184,7 @@ Page({
     if (marked.has(q.id)) marked.delete(q.id)
     else marked.add(q.id)
     this.setData({ marked, isMarked: marked.has(q.id) })
+    this.syncNavCls()
   },
 
   prevQuestion() {
@@ -195,6 +200,7 @@ Page({
       isMarked: this.data.marked.has(q.id),
       typeLabel: getTypeLabel(q.type)
     })
+    this.syncNavCls()
   },
 
   nextQuestion() {
@@ -210,6 +216,7 @@ Page({
       isMarked: this.data.marked.has(q.id),
       typeLabel: getTypeLabel(q.type)
     })
+    this.syncNavCls()
   },
 
   navNumClass(index) {
@@ -220,6 +227,33 @@ Page({
     if (answered) cls.push('answered')
     if (this.data.marked.has(q.id)) cls.push('marked')
     return cls.join(' ')
+  },
+
+  /**
+   * 把每格的状态 class 预先算好写进 data。
+   *
+   * 不能写成 class="nav-num {{navNumClass(qi.idx)}}"：那个表达式的
+   * 结果依赖 answers / currentIndex / marked，但 wx:for 遍历的 qi
+   * （即 group.indexes 里的 { idx, num }）在作答时根本没变。WeChat
+   * 按 wx:key 对列表做 diff，qi 不是新对象就不重渲染该节点，函数
+   * 绑定于是永远不会被重新求值 —— 面板会一直停在首次渲染的样子
+   * （全部未作答 = 全灰），做没做的题看起来一模一样。
+   *
+   * 改为把结果放进 data，状态一变就更新，视图层的 diff 才能看到
+   * 变化。用路径写法只发真正变化的那几格，避免每次点选项都把
+   * 190 个格子重传一遍。
+   */
+  syncNavCls() {
+    const patch = {}
+    this.data.questionGroups.forEach((g, gi) => {
+      g.indexes.forEach((it, ii) => {
+        const cls = this.navNumClass(it.idx)
+        if (cls !== it.cls) {
+          patch[`questionGroups[${gi}].indexes[${ii}].cls`] = cls
+        }
+      })
+    })
+    if (Object.keys(patch).length) this.setData(patch)
   },
 
   jumpToQuestion(e) {
@@ -235,6 +269,7 @@ Page({
       typeLabel: getTypeLabel(q.type),
       navigatorOpen: false
     })
+    this.syncNavCls()
   },
 
   toggleNavigator() {

@@ -93,7 +93,7 @@
                 wx:for="{{group.indexes}}"
                 wx:key="idx"
                 wx:for-item="qi"
-                class="nav-num {{navNumClass(qi.idx)}}"
+                class="nav-num {{qi.cls}}"
                 bindtap="jumpToQuestion"
                 data-index="{{qi.idx}}"
               >
