@@ -72,13 +72,9 @@
             </view>
             <view class="task-sub">{{task.full}}</view>
 
-            <!-- 标签行 -->
+            <!-- 标签行：题型胶囊（左） + 分值（右） -->
             <view class="task-meta">
-              <text class="task-type {{task.type === 'code' ? 'tag' : (task.type === 'mixed' ? 'tag tag-purple' : 'tag tag-warning')}}">
-                {{task.typeLabel}}
-              </text>
-              <text class="task-variant" wx:if="{{task.variant}}">{{task.variant}}</text>
-              <text class="task-variant" wx:if="{{!task.hasTemplate}}">模板待补充</text>
+              <text class="task-type task-type-{{task.type}}">{{task.typeLabel}}</text>
               <text class="task-score">{{task.scoreTotal}} 分</text>
             </view>
 
