@@ -1,5 +1,5 @@
 import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
-import { practicalTaskType, splitDocSubQuestions } from '../../utils/domain'
+import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, getCodeReferenceLines, COMMON_MISTAKES } from '../../utils/domain'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 Page({
@@ -17,7 +17,10 @@ Page({
     criteriaOpen: false,
     hasContent: false,
     gradeResult: null,
-    debugInfo: ''
+    debugInfo: '',
+    referenceOpen: false,
+    codeReference: [],
+    commonMistakes: []
   },
 
   onLoad(options) {
@@ -82,12 +85,14 @@ Page({
     // 生成代码行（code / mixed 且有模板）
     let codeLines = []
     let blankValues = {}
+    let codeReference = []
     const saved = this.loadDraft()
 
     if (hasTemplate && this.templates && this.templates[this.questionId]) {
       const segments = this.templates[this.questionId].segments || []
       if (saved?.blanks) blankValues = { ...saved.blanks }
       codeLines = this.splitSegmentsToLines(segments)
+      codeReference = getCodeReferenceLines(segments)
     }
 
     // 文档部分：document 用 answer/sections，mixed 用 docAnswer
@@ -119,6 +124,8 @@ Page({
       task,
       codeLines,
       blankValues,
+      codeReference,
+      commonMistakes: (type === 'code' || type === 'mixed') ? COMMON_MISTAKES : [],
       answer: docAnswer,
       docAnswer,
       docSections,
@@ -247,6 +254,17 @@ Page({
   async submitGrade() {
     const task = this.data.task
     const config = getAIConfig()
+
+    // 纯代码题：规则匹配判分，不调 AI
+    if (task.type === 'code') {
+      const userCode = this.assembleCode()
+      const result = gradeCodeTask(userCode, task.scoreItems)
+      this.setData({
+        gradeResult: { total_score: result.total_score, maxScore: result.maxScore, items: result.items, mode: 'rule' }
+      })
+      return
+    }
+
     if (!config.apiKey) {
       wx.showModal({
         title: '未配置 API Key',
@@ -280,12 +298,16 @@ Page({
       }
       const maxScore = task.scoreItems.reduce((s, item) => s + Number(item.score), 0)
       this.setData({
-        gradeResult: { total_score: result.total_score, maxScore, items: result.items }
+        gradeResult: { total_score: result.total_score, maxScore, items: result.items, mode: 'ai' }
       })
     } catch (err) {
       wx.hideLoading()
       this.setData({ gradeResult: { error: err.message } })
     }
+  },
+
+  toggleReference() {
+    this.setData({ referenceOpen: !this.data.referenceOpen })
   },
 
   buildSubmission() {

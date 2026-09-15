@@ -166,9 +166,39 @@
           <text class="grade-title">判分失败：{{gradeResult.error}}</text>
         </block>
         <block wx:else>
-          <text class="grade-title">智能评测：{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分</text>
+          <text class="grade-title">
+            智能评测：{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分
+            <text class="grade-mode">{{gradeResult.mode === 'rule' ? '· 规则匹配' : '· AI'}}</text>
+          </text>
           <view wx:for="{{gradeResult.items}}" wx:key="id" class="grade-item">
             <text>{{item.id}}：{{item.score}} / {{item.max_score}} · {{item.reason}}</text>
+          </view>
+        </block>
+      </view>
+
+      <!-- 参考答案（代码题/混合题） -->
+      <view wx:if="{{codeReference.length && !gradeResult.error}}" class="reference-section">
+        <view class="reference-header" bindtap="toggleReference">
+          <text class="reference-title">📖 参考答案与解析</text>
+          <text class="reference-arrow">{{referenceOpen ? '▲' : '▼'}}</text>
+        </view>
+        <block wx:if="{{referenceOpen}}">
+          <scroll-view class="code-scroll" scroll-y scroll-x enhanced show-scrollbar="{{true}}">
+            <view class="code-editor">
+              <view wx:for="{{codeReference}}" wx:for-item="line" wx:key="index" class="code-line">
+                <text class="line-num">{{index + 1}}</text>
+                <view class="line-content">
+                  <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
+                    <text wx:if="{{part.kind === 'blank'}}" class="code-blank-ref">{{part.value}}</text>
+                    <text wx:else class="code-text">{{part.value}}</text>
+                  </block>
+                </view>
+              </view>
+            </view>
+          </scroll-view>
+          <view class="mistakes" wx:if="{{commonMistakes.length}}">
+            <text class="mistakes-title">常见错误提醒：</text>
+            <text wx:for="{{commonMistakes}}" wx:key="*this" class="mistake-item">{{item}}</text>
           </view>
         </block>
       </view>

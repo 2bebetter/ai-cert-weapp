@@ -208,3 +208,90 @@ export function splitDocSubQuestions(question) {
 export function hasDocSubQuestions(question) {
   return splitDocSubQuestions(question).length > 1
 }
+
+// ---- 代码题规则判分 ----
+
+/** pandas/numpy 常见 API 关键词 */
+const PY_API = new Set([
+  'read_csv','read_excel','read_json','read_sql','head','tail','info','describe',
+  'shape','columns','dtypes','value_counts','groupby','agg','merge','concat',
+  'dropna','fillna','drop','rename','apply','map','cut','qcut','pd.cut','pd.qcut',
+  'pivot_table','crosstab','sort_values','unique','nunique','isnull','notnull',
+  'astype','loc','iloc','to_csv','to_excel','np.where','np.array','np.mean',
+  'np.median','np.std','sum','mean','max','min','count','size','plot','figure',
+  'subplot','hist','boxplot','scatter','bar','barh','to_numpy','values',
+  'reset_index','set_index','isna','notna','drop_duplicates','duplicated',
+  'str.contains','str.replace','str.split','str.strip','replace','abs','round'
+])
+
+/** 从 score_item desc 提取关键词 */
+function extractKeywords(desc) {
+  const words = new Set()
+  // 提取引号内容
+  const quoteRe = /['"]([^'"]+)['"]/g
+  let m
+  while ((m = quoteRe.exec(desc)) !== null) {
+    if (m[1].length > 1) words.add(m[1])
+  }
+  // 提取 PANDA_API
+  for (const api of PY_API) {
+    if (desc.toLowerCase().includes(api)) words.add(api)
+  }
+  // 提取中文函数动作词（常见）
+  const cnWords = ['读取','加载','统计','计算','创建','划分','分配','判断','输出','显示','绘制','过滤','排序','合并','分组','转换']
+  for (const w of cnWords) {
+    if (desc.includes(w)) words.add(w)
+  }
+  return [...words]
+}
+
+/** 代码题规则判分 */
+export function gradeCodeTask(userCode, scoreItems) {
+  const code = (userCode || '').toLowerCase()
+  const maxScore = (scoreItems || []).reduce((s, i) => s + Number(i.score), 0)
+  let total = 0
+  const items = (scoreItems || []).map((item) => {
+    const desc = item.desc || ''
+    const keywords = extractKeywords(desc)
+    if (keywords.length === 0) {
+      return { id: item.id, max_score: Number(item.score), score: 0, reason: '无法自动判定（需对照输出结果/截图），请自查' }
+    }
+    const hits = keywords.filter((k) => code.includes(String(k).toLowerCase()))
+    const ratio = hits.length / keywords.length
+    let score = 0
+    if (ratio >= 1) score = Number(item.score)
+    else if (ratio >= 0.5) score = Math.max(1, Math.round(Number(item.score) * 0.5))
+    total += score
+    return { id: item.id, max_score: Number(item.score), score, reason: `命中 ${hits.length}/${keywords.length} 个关键点` }
+  })
+  return { total_score: total, maxScore, items }
+}
+
+/** 从模板生成参考代码 lines（blank 带占位符） */
+export function getCodeReferenceLines(segments) {
+  const lines = []
+  let current = []
+  const flush = () => { if (current.length) { lines.push(current); current = [] } }
+  for (const seg of segments) {
+    if (seg.kind === 'text') {
+      const parts = String(seg.value).split('\n')
+      for (let i = 0; i < parts.length; i++) {
+        if (i > 0) flush()
+        if (parts[i].length > 0) current.push({ kind: 'text', value: parts[i] })
+      }
+    } else {
+      current.push({ kind: 'blank', id: seg.id, value: `【${seg.id}】` })
+    }
+  }
+  flush()
+  return lines
+}
+
+/** 通用常见错误提示 */
+export const COMMON_MISTAKES = [
+  '⚠️ 检查文件名、列名是否拼写正确（大小写敏感）',
+  '⚠️ 调用函数后记得加括号，如 read_csv() 不是 read_csv',
+  '⚠️ 赋值语句确认变量名一致，如 data = pd.read_csv(...)',
+  '⚠️ 字符串记得加引号，如 data[\'列名\']',
+  '⚠️ 检查导入语句：import pandas as pd / import numpy as np'
+]
