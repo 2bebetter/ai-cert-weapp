@@ -211,7 +211,15 @@
           <text class="analysis-title">解答解析</text>
           <text class="analysis-close" catchtap="closeBlankAnalysis">✕</text>
         </view>
-        <scroll-view class="analysis-body" scroll-y>
+        <scroll-view class="analysis-body" scroll-y enhanced show-scrollbar="{{true}}">
+          <!-- 你的作答 -->
+          <view class="analysis-block">
+            <text class="analysis-label">你的作答</text>
+            <text class="analysis-your-answer {{currentAnalysis.status === 'empty' ? 'your-empty' : (currentAnalysis.status === 'correct' ? 'your-correct' : 'your-wrong')}}">
+              {{currentAnalysis.userValue || '未填'}}
+            </text>
+          </view>
+          <!-- 本空参考答案 -->
           <view class="analysis-block">
             <text class="analysis-label">① 本空参考答案</text>
             <text class="analysis-answer">{{currentAnalysis.reference}}</text>

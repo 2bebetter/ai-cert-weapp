@@ -218,9 +218,11 @@
 .analysis-body {
   padding: 12px 16px 24px;
   flex: 1;
+  overflow-y: auto;
+  max-height: calc(65vh - 50px);
 }
 .analysis-block {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 .analysis-block:first-child { margin-top: 0; }
 .analysis-label {
@@ -228,18 +230,39 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--text-2);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
+
+/* 你的作答 */
+.analysis-your-answer {
+  display: block;
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: 13px;
+  background: #1e1e2e;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  line-height: 1.5;
+  color: #cdd6f4;
+  border-left: 3px solid #6c7086;
+}
+.analysis-your-answer.your-correct { border-left-color: #4ade80; }
+.analysis-your-answer.your-wrong { border-left-color: #f87171; }
+.analysis-your-answer.your-empty { color: #f87171; font-weight: 500; border-left-color: #fbbf24; }
+
+/* 参考答案（大字号 + 高亮） */
 .analysis-answer {
   display: block;
   font-family: 'Menlo', 'Consolas', monospace;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--primary);
   background: var(--bg);
-  padding: 6px 8px;
+  padding: 8px 10px;
   border-radius: var(--radius-sm);
   line-height: 1.5;
+  border: 1px solid var(--border);
 }
+
 .analysis-text {
   display: block;
   font-size: 12px;
