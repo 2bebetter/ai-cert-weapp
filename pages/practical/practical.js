@@ -1,5 +1,4 @@
 import { getPracticalSubmissions } from '../../utils/storage'
-import { loadTemplateIds } from '../../utils/templates'
 import {
   buildTaskList,
   applyTaskFilters,
@@ -29,18 +28,17 @@ Page({
   },
 
   /**
-   * 下拉刷新：重置分组展开状态与本地缓存，全部模块数据重新计算
-   * @param {Boolean} refreshTemplates 是否跳过模板内存缓存重新拉取
+   * 下拉刷新：重置分组展开状态，本地记录重新计算
    */
   async onPullDownRefresh() {
     try {
       wx.removeStorageSync(EXPAND_KEY)
     } catch (e) { /* 忽略 */ }
-    await this.loadTasks(true)
+    await this.loadTasks()
     wx.stopPullDownRefresh()
   },
 
-  async loadTasks(refreshTemplates = false) {
+  async loadTasks() {
     const app = getApp()
     let questions = app.globalData.practicalQuestions
 
@@ -53,16 +51,13 @@ Page({
       questions = app.globalData.practicalQuestions
     }
 
-    // 有代码模板的题目才可练（云函数 + 本地文件双缓存）
-    let templateIds = new Set()
-    try {
-      templateIds = await loadTemplateIds(refreshTemplates)
-    } catch (e) {
-      templateIds = new Set()
-    }
-
+    // 注意：列表页不加载代码模板。
+    // 列表只需要「题库 + 本地作答记录」，模板只在答题页（detail.js）用。
+    // 此前这里 await loadTemplateIds()，而 utils/templates.js 是
+    // 「网络优先、本地兜底」，于是每次进列表页都要等一次 getTemplates
+    // 云函数往返，loading 一直挂到它返回。
     const submissions = getPracticalSubmissions() || []
-    const allTasks = buildTaskList(questions || [], submissions, templateIds)
+    const allTasks = buildTaskList(questions || [], submissions)
 
     this.allTasks = allTasks
     this.setData({ loading: false })

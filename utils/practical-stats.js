@@ -120,9 +120,8 @@ export function taskProgress(submissions, qid) {
  * 把原始题目 + 本地提交记录 组装成列表项
  * @param {Array} questions 原始实操题
  * @param {Array} submissions 本地提交记录
- * @param {Set<String>} templateIds 有代码模板的题目 id
  */
-export function buildTaskList(questions, submissions, templateIds) {
+export function buildTaskList(questions, submissions) {
   return (questions || []).map((q) => {
     const id = String(q.id)
     const status = taskStatus(submissions, id)
@@ -136,7 +135,6 @@ export function buildTaskList(questions, submissions, templateIds) {
       type: practicalTaskType(q),
       typeLabel: typeLabelOf(q),
       scoreTotal: q.score_total || 0,
-      hasTemplate: templateIds ? templateIds.has(id) : true,
       status,
       statusLabel: STATUS_META[status].label,
       statusBadge: STATUS_META[status].badge,
