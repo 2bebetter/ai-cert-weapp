@@ -560,7 +560,6 @@ function detectPattern(answer) {
  * @returns {{ api:string|null, text:string }}
  */
 export function explainBlank(answer, hint) {
-  const purpose = cleanHint(hint) || '完成本行代码要求的数据处理'
   const api = detectApi(answer)
   const guide = api ? API_GUIDE[api] : null
 
@@ -571,8 +570,7 @@ export function explainBlank(answer, hint) {
       text: [
         `这行代码使用 ${shown}，${guide.what}。`,
         '',
-        `业务目的：${purpose}。`,
-        `原理：${guide.principle}`
+        guide.principle
       ].join('\n')
     }
   }
@@ -584,8 +582,7 @@ export function explainBlank(answer, hint) {
       text: [
         `这行代码属于「${pattern.label}」，${pattern.what}。`,
         '',
-        `业务目的：${purpose}。`,
-        `原理：${pattern.principle}`
+        pattern.principle
       ].join('\n')
     }
   }
@@ -594,10 +591,9 @@ export function explainBlank(answer, hint) {
   return {
     api: null,
     text: [
-      `这行代码填的是 \`${String(answer).trim()}\`，用于${purpose}。`,
+      `这行代码填的是 \`${String(answer).trim()}\`。`,
       '',
-      `业务目的：${purpose}。`,
-      '原理：按题目注释给出的功能要求，这里需要调用对应的 pandas / numpy 方法完成该步骤；'
+      '按题目注释给出的功能要求，这里需要调用对应的 pandas / numpy 方法完成该步骤；'
       + '把填好的代码跑一遍，确认输出结果与题目要求的表格/数值一致即可。'
     ].join('\n')
   }
