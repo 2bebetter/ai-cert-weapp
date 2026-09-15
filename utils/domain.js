@@ -65,7 +65,18 @@ export function buildTypeStats(attempts) {
   return stats
 }
 
-/** 生成模拟试卷（判断40 + 单选140 + 多选10） */
+/**
+ * 生成模拟试卷
+ *
+ * 按题型分三节，与真实考试一致：
+ *   判断题 第 1~40 题 / 单选题 第 41~180 题 / 多选题 第 181~190 题
+ * 每种题型内部随机抽题、随机排序，但三节之间不再交叉。
+ *
+ * 注意：这里以前在拼好之后还有一次「全部混洗」，把分节结构打散了。
+ * 那会让题号面板按题型分组后，组内序号与全局题号完全对不上
+ * （顶部栏说「41 / 190」，面板上却高亮「判断题第 10 格」）。
+ * 保留分节后，组内序号与全局题号天然重合，面板不再需要两套编号。
+ */
 export function buildTheoryExam(questions, random = Math.random) {
   const quotas = { judge: 40, single: 140, multiple: 10 }
   const exam = []
@@ -78,11 +89,6 @@ export function buildTheoryExam(questions, random = Math.random) {
       ;[shuffled[index], shuffled[target]] = [shuffled[target], shuffled[index]]
     }
     exam.push(...shuffled.slice(0, quota))
-  }
-  // 全部混洗
-  for (let index = exam.length - 1; index > 0; index -= 1) {
-    const target = Math.floor(random() * (index + 1))
-    ;[exam[index], exam[target]] = [exam[target], exam[index]]
   }
   return exam
 }

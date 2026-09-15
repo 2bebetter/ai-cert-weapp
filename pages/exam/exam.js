@@ -127,10 +127,14 @@ Page({
     questions.forEach((q, i) => {
       const type = q.type || 'judge'
       if (!groups[type]) {
-        groups[type] = { type, indexes: [], counter: 1 }
+        groups[type] = { type, indexes: [] }
       }
-      // cls 由 syncNavCls() 维护，不能留到 WXML 里算（见该方法注释）
-      groups[type].indexes.push({ idx: i, num: groups[type].counter++, cls: '' })
+      // num 用全局题号 i + 1，与顶部栏的「N / 190」完全一致。
+      // 试卷按题型分节（判断 1-40 / 单选 41-180 / 多选 181-190），
+      // 所以分组之后组内的号也是连续的，两套编号天然重合，
+      // 不会再出现「顶部栏 41/190、面板却高亮判断题第 10 格」。
+      // cls 由 syncNavCls() 维护，不能留到 WXML 里算（见该方法注释）。
+      groups[type].indexes.push({ idx: i, num: i + 1, cls: '' })
     })
     return Object.values(groups)
   },
