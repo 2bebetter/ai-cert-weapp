@@ -1,6 +1,6 @@
 import { buildTheoryExam, scoreTheoryExam, scoreTheory, getTypeLabel } from '../../utils/domain'
 import { getExamSessions, saveExamSession, saveExam, getSavedExam, clearSavedExam } from '../../utils/storage'
-import { EXAM_DURATION, EXAM_QUOTAS } from '../../utils/constants'
+import { EXAM_DURATION, EXAM_QUOTAS, EXAM_HISTORY_LIMIT } from '../../utils/constants'
 
 Page({
   data: {
@@ -39,7 +39,9 @@ Page({
     const sessions = getExamSessions()
     const theorySessions = sessions
       .filter((s) => s.kind === 'theory' && s.report)
-      .slice(0, 10)
+      // getExamSessions 里最新的一条在最前（saveExamSession 用 unshift 插入），
+      // 所以取前 N 条即最近 N 次考试
+      .slice(0, EXAM_HISTORY_LIMIT)
       .map((s) => ({
         id: s.id,
         date: new Date(s.completedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),

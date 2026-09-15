@@ -16,6 +16,8 @@ export const ANSWER_STATUS = {
 /** 模拟考试配比 */
 export const EXAM_QUOTAS = { judge: 40, single: 140, multiple: 10 }
 export const EXAM_DURATION = 90 * 60 * 1000 // 90 分钟
+/** 考试记录最多展示的条数（列表最新在前，故取前 N 条即最近 N 次） */
+export const EXAM_HISTORY_LIMIT = 5
 
 /** 实操任务类型 */
 export const TASK_TYPES = {
