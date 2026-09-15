@@ -1,3 +1,13 @@
+/**
+ * 小程序版本号的兜底值。
+ *
+ * 正式版会从 wx.getAccountInfoSync().miniProgram.version 拿到真实版本
+ * （就是上传代码时在开发者工具里填的那个），这里的值只在开发版 /
+ * 体验版下使用 —— 那两种环境 miniProgram.version 是空的。
+ * 见 utils/version.js。
+ */
+export const APP_VERSION = '1.1.0'
+
 /** 题型映射 */
 export const QUESTION_TYPES = {
   judge: { label: '判断题', short: '判断' },

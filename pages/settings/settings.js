@@ -1,16 +1,20 @@
 import { getAIConfig, saveAIConfig } from '../../utils/storage'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
+import { getAppVersion } from '../../utils/version'
 
 Page({
   data: {
     baseUrl: 'https://api.deepseek.com/v1',
     apiKey: '',
     model: 'deepseek-chat',
-    testResult: null
+    testResult: null,
+    aboutVersion: ''
   },
 
   onLoad() {
     this.loadConfig()
+    // 版本号从 wx.getAccountInfoSync() 动态取，不再写死在 WXML 里
+    this.setData({ aboutVersion: getAppVersion() })
   },
 
   loadConfig() {

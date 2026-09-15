@@ -41,7 +41,7 @@
   <!-- 关于 -->
   <view class="section about-section">
     <text class="about-title">AI Trainer 备考练习</text>
-    <text class="about-version">v1.0.0</text>
+    <text class="about-version">{{aboutVersion}}</text>
     <button class="btn btn-ghost btn-sm github-btn" bindtap="copyGithubLink">
       ⭐ GitHub 上关注本项目
     </button>
