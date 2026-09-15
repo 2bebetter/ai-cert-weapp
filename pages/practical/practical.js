@@ -4,7 +4,6 @@ import {
   buildTaskList,
   applyTaskFilters,
   buildStats,
-  buildRecommendations,
   buildGroups
 } from '../../utils/practical-stats'
 
@@ -19,7 +18,6 @@ Page({
     taskTypes: ['全部类型', '代码填空', '文档作答', '混合题'],
     typeIndex: 0,
     // 数据
-    recommend: [],
     stats: { total: 0, practiced: 0, inProgress: 0, unattempted: 0 },
     groups: [],
     filteredCount: 0
@@ -87,7 +85,6 @@ Page({
     this.setData({
       filteredCount: filtered.length,
       stats: buildStats(filtered),
-      recommend: buildRecommendations(filtered),
       groups: buildGroups(filtered, expandedMap)
     })
   },

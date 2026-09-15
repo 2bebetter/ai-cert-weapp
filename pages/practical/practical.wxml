@@ -26,28 +26,7 @@
       <text class="filter-info">{{filteredCount}} 项</text>
     </view>
 
-    <!-- ═══════════ 2. 推荐练习（最多 2 条，无则不显示） ═══════════ -->
-    <view class="card recommend-card" wx:if="{{recommend.length}}">
-      <view class="card-title">
-        <view class="icon-pin"></view>
-        <text>推荐练习</text>
-      </view>
-      <view class="rec-list">
-        <view
-          wx:for="{{recommend}}"
-          wx:key="id"
-          class="rec-item"
-        >
-          <view class="rec-main" bindtap="openTask" data-id="{{item.id}}">
-            <text class="rec-name">{{item.short}}</text>
-            <text class="rec-reason">{{item.reason}}</text>
-          </view>
-          <view class="rec-btn" catchtap="openTask" data-id="{{item.id}}">{{item.action}}</view>
-        </view>
-      </view>
-    </view>
-
-    <!-- ═══════════ 3. 统计数据 ═══════════ -->
+    <!-- ═══════════ 2. 统计数据 ═══════════ -->
     <view class="card stats-card">
       <view class="stat-item">
         <text class="stat-num stat-done">{{stats.practiced}}</text>
@@ -65,7 +44,7 @@
       </view>
     </view>
 
-    <!-- ═══════════ 4. 按题型折叠分组的题目列表 ═══════════ -->
+    <!-- ═══════════ 3. 按题型折叠分组的题目列表 ═══════════ -->
     <block wx:if="{{groups.length}}">
       <view wx:for="{{groups}}" wx:for-item="group" wx:key="name" class="group">
         <!-- 分组头 -->

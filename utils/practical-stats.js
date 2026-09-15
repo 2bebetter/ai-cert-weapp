@@ -183,49 +183,6 @@ export function buildStats(tasks) {
 }
 
 /**
- * 推荐练习（最多 2 条）
- *   ① 进行中未完成
- *   ② 薄弱类型（已练习但没满分的题所属类型）里的新题
- *   ③ 兜底：新题
- * 无模板的题不可练，不参与推荐
- */
-export function buildRecommendations(tasks) {
-  const out = []
-  const taken = new Set()
-  const push = (t, reason, action) => {
-    if (out.length >= 2 || taken.has(t.id)) return
-    taken.add(t.id)
-    out.push({ id: t.id, short: t.short, full: t.full, reason, action })
-  }
-
-  // ① 进行中
-  ;(tasks || []).filter((t) => t.hasTemplate && t.status === 'doing')
-    .forEach((t) => push(t, '上次做到一半，继续完成', '继续练习'))
-
-  // ② 薄弱类型
-  if (out.length < 2) {
-    const weak = new Set()
-    ;(tasks || []).forEach((t) => {
-      if (t.status === 'done' && t.score != null && t.maxScore != null && t.score < t.maxScore) {
-        weak.add(t.category)
-      }
-    })
-    if (weak.size) {
-      ;(tasks || []).filter((t) => t.hasTemplate && t.status === 'new' && weak.has(t.category))
-        .forEach((t) => push(t, '薄弱专项巩固练习', '开始练习'))
-    }
-  }
-
-  // ③ 兜底
-  if (out.length < 2) {
-    ;(tasks || []).filter((t) => t.hasTemplate && t.status === 'new')
-      .forEach((t) => push(t, '新题推荐练习', '开始练习'))
-  }
-
-  return out
-}
-
-/**
  * 按题型分组
  * 默认全部折叠；只记录用户手动展开过的分组
  * @param {Object} expandedMap { [分组名]: true } 表示该组被展开
