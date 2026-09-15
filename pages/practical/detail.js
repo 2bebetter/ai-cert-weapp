@@ -150,9 +150,7 @@ Page({
       if (rest > 0) hidden.push(`${rest} 条任务`)
       if (qSections.fields) hidden.push('数据集字段说明')
       if (qSections.output) hidden.push('输出与保存要求')
-      collapsedHint = hidden.length
-        ? `展开全部（还有 ${hidden.join('、')}）`
-        : '展开全部（背景与任务完整内容）'
+      collapsedHint = hidden.length ? `已折叠 ${hidden.join('、')}` : ''
     }
     this.setData({
       loading: false,

@@ -69,10 +69,9 @@
           </view>
         </view>
 
-        <!-- 展开 / 收起入口：常驻卡片底部 -->
-        <view class="more-hint" catchtap="toggleQuestion">
-          <text>{{questionOpen ? '收起题目详情' : collapsedHint}}</text>
-          <view class="hint-chev {{questionOpen ? 'chev-up' : ''}}"></view>
+        <!-- 折叠提示：不是按钮，只说明上面被截断了（正式开关在右上角） -->
+        <view class="collapse-hint" wx:if="{{!questionOpen && collapsedHint}}" catchtap="toggleQuestion">
+          {{collapsedHint}}
         </view>
       </block>
 
