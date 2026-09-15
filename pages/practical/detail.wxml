@@ -33,7 +33,7 @@
         <!-- ① 背景简介（收起时也显示） -->
         <view class="qsec" wx:if="{{qSections.background}}">
           <text class="qsec-label">题目背景</text>
-          <view class="qsec-text">
+          <view class="qsec-text {{questionOpen ? '' : 'clamp-3'}}">
             <text wx:for="{{qSections.bgParts}}" wx:key="index" class="{{item.code ? 'mono' : ''}}">{{item.v}}</text>
           </view>
         </view>
@@ -45,14 +45,11 @@
             <block wx:for="{{qSections.tasks}}" wx:key="num">
               <view wx:if="{{questionOpen || index < 3}}" class="task-item">
                 <text class="task-num">{{item.num}}</text>
-                <view class="task-text">
+                <view class="task-text {{questionOpen ? '' : 'clamp-2'}}">
                   <text wx:for="{{item.parts}}" wx:for-item="p" wx:key="index" class="{{p.code ? 'mono' : ''}}">{{p.v}}</text>
                 </view>
               </view>
             </block>
-          </view>
-          <view wx:if="{{!questionOpen && hasMoreTasks}}" class="more-hint" bindtap="toggleQuestion">
-            还有 {{qSections.tasks.length - 3}} 条任务，点击展开查看
           </view>
         </view>
 
@@ -70,6 +67,12 @@
           <view class="warn-box">
             <text wx:for="{{qSections.outputParts}}" wx:key="index" class="{{item.code ? 'mono-hl' : ''}}">{{item.v}}</text>
           </view>
+        </view>
+
+        <!-- 展开 / 收起入口：常驻卡片底部 -->
+        <view class="more-hint" catchtap="toggleQuestion">
+          <text>{{questionOpen ? '收起题目详情' : collapsedHint}}</text>
+          <view class="hint-chev {{questionOpen ? 'chev-up' : ''}}"></view>
         </view>
       </block>
 

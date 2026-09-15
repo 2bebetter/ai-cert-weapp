@@ -213,15 +213,43 @@ page {
   word-break: break-word;
 }
 
+/* 收起时的截断：必须让「收起」明显变短，否则用户会以为没反应 */
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+/* 展开 / 收起入口：整行可点 */
 .more-hint {
-  margin-top: 10px;
-  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px;
   border-radius: 6px;
   background: #eef2ff;
   color: #2563eb;
-  font-size: 12px;
+  font-size: 13px;
   text-align: center;
   line-height: 18px;
+}
+
+.hint-chev {
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid #2563eb;
+  border-bottom: 1.5px solid #2563eb;
+  transform: rotate(45deg) translate(-1px, -1px);
 }
 
 /* 等宽高亮（字段名 / 文件名 / 文件夹名） */

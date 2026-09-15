@@ -3,6 +3,7 @@ import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswe
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 const UI_STATE_KEY = 'practical_ui_state'
+const VISIBLE_TASKS = 3   // 收起时显示的任务条数
 
 const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
 
@@ -136,11 +137,22 @@ Page({
     }
 
     const qSections = parseQuestionSections(q.question || '')
+    let collapsedHint = ''
     if (qSections) {
       qSections.bgParts = splitHighlight(qSections.background)
       qSections.fieldParts = splitHighlight(qSections.fields)
       qSections.outputParts = splitHighlight(qSections.output)
       qSections.tasks = qSections.tasks.map((t) => ({ ...t, parts: splitHighlight(t.text) }))
+
+      // 收起时到底藏了什么，明确写出来，避免用户以为「点了没反应」
+      const hidden = []
+      const rest = qSections.tasks.length - VISIBLE_TASKS
+      if (rest > 0) hidden.push(`${rest} 条任务`)
+      if (qSections.fields) hidden.push('数据集字段说明')
+      if (qSections.output) hidden.push('输出与保存要求')
+      collapsedHint = hidden.length
+        ? `展开全部（还有 ${hidden.join('、')}）`
+        : '展开全部（背景与任务完整内容）'
     }
     this.setData({
       loading: false,
@@ -149,7 +161,7 @@ Page({
       qSections,
       questionOpen: uiState.questionOpen,
       criteriaOpen: uiState.criteriaOpen,
-      hasMoreTasks: !!(qSections && qSections.tasks.length > 3),
+      collapsedHint,
       codeLines,
       blankValues,
       blankAnswers,
