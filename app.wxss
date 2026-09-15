@@ -1,3 +1,5 @@
+@import "styles/icons.wxss";
+
 /* 全局样式 - 参考现有项目 styles.css 的配色和布局体系 */
 page {
   --primary: #007aff;
@@ -173,3 +175,5 @@ page {
   font-size: 13px;
   color: var(--text-3);
 }
+/* 按钮内的图标 + 文字行：水平居中 */
+.btn .ic-row { justify-content: center; }

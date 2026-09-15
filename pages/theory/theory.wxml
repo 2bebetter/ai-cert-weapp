@@ -7,7 +7,7 @@
 
   <!-- 加载失败 -->
   <view class="empty-state" wx:elif="{{loadError}}">
-    <text>😵</text>
+    <view class="ic ic-40 ic-alertCircle"></view>
     <text>题库加载失败</text>
     <text class="placeholder">请检查网络或云存储配置</text>
     <button class="btn btn-primary" bindtap="retry" style="margin-top:16px">重新加载</button>
@@ -18,13 +18,13 @@
     <picker mode="selector" range="{{filterTypes}}" bindchange="onFilterTypeChange">
       <view class="filter-btn">
         <text>{{filterTypes[filterTypeIndex]}}</text>
-        <text class="arrow">▼</text>
+        <view class="ic ic-12 ic-chevronDown"></view>
       </view>
     </picker>
     <picker mode="selector" range="{{filterAnswers}}" bindchange="onFilterAnswerChange">
       <view class="filter-btn">
         <text>{{filterAnswers[filterAnswerIndex]}}</text>
-        <text class="arrow">▼</text>
+        <view class="ic ic-12 ic-chevronDown"></view>
       </view>
     </picker>
     <view class="filter-info jump-entry" bindtap="openJump">
@@ -84,14 +84,24 @@
 
     <!-- 导航 -->
     <view class="nav-bar">
-      <button class="btn btn-ghost" bindtap="prevQuestion" disabled="{{currentIndex <= 0}}">← 上一题</button>
-      <button class="btn btn-ghost" bindtap="nextQuestion" disabled="{{currentIndex >= filtered.length - 1}}">下一题 →</button>
+      <button class="btn btn-ghost" bindtap="prevQuestion" disabled="{{currentIndex <= 0}}">
+        <view class="ic-row">
+          <view class="ic ic-14 ic-arrowLeft"></view>
+          <text>上一题</text>
+        </view>
+      </button>
+      <button class="btn btn-ghost" bindtap="nextQuestion" disabled="{{currentIndex >= filtered.length - 1}}">
+        <view class="ic-row">
+          <text>下一题</text>
+          <view class="ic ic-14 ic-arrowRight"></view>
+        </view>
+      </button>
     </view>
   </scroll-view>
 
   <!-- 空状态 -->
   <view class="empty-state" wx:elif="{{!loading && !loadError && !currentQuestion}}">
-    <text>📚</text>
+    <view class="ic ic-40 ic-bookOpen"></view>
     <text>当前筛选没有题目</text>
     <text class="placeholder" wx:if="{{filterAnswerIndex === 0}}">当前筛选为"有答案的题"，试试切换到"全部理论题"</text>
   </view>
@@ -126,7 +136,10 @@
   <!-- 笔记弹窗 -->
   <view class="overlay {{noteModalVisible ? '' : 'hidden'}}" catchtap="closeNoteModal">
     <view class="note-modal" catchtap="noop">
-      <text class="note-modal-title">📝 笔记</text>
+      <view class="note-modal-title ic-row">
+        <view class="ic ic-16 ic-pen"></view>
+        <text>笔记</text>
+      </view>
       <textarea class="note-textarea" value="{{noteText}}" bindinput="onNoteInput" placeholder="记下你的思路、疑问或记忆要点…" maxlength="-1" auto-height></textarea>
       <view class="note-modal-actions">
         <button class="btn btn-ghost" catchtap="closeNoteModal">取消</button>

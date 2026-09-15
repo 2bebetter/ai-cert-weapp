@@ -49,7 +49,7 @@ Page({
       })
 
       if (res.result && res.result.ok) {
-        this.setData({ testResult: { ok: true, msg: '连接成功 ✓' } })
+        this.setData({ testResult: { ok: true, msg: '连接成功' } })
       } else {
         this.setData({ testResult: { ok: false, msg: res.result?.error || '连接失败' } })
       }

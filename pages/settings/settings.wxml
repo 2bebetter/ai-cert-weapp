@@ -31,7 +31,10 @@
 
   <!-- 反馈 -->
   <view class="section">
-    <text class="section-title">📮 问题反馈</text>
+    <view class="section-title ic-row">
+      <view class="ic ic-16 ic-mail"></view>
+      <text>问题反馈</text>
+    </view>
     <text class="section-desc">发现题目有误、功能异常，或有什么建议？告诉我们，我们会尽快处理。</text>
     <button class="btn btn-secondary btn-block" bindtap="openFeedbackModal" style="margin-top:12px">
       提交反馈
@@ -46,14 +49,20 @@
     <text class="about-desc">题库参考上海交通大学职业技能认证平台公开资料</text>
     <text class="about-desc">评测基于自行提供的第三方 API Key</text>
     <button class="btn btn-ghost btn-sm github-btn" bindtap="copyGithubLink">
-      ⭐ GitHub 上关注本项目
+      <view class="ic-row">
+        <view class="ic ic-16 ic-github"></view>
+        <text>GitHub 上关注本项目</text>
+      </view>
     </button>
   </view>
 
   <!-- 反馈弹窗 -->
   <view class="overlay {{feedbackModalVisible ? '' : 'hidden'}}" catchtap="closeFeedbackModal">
     <view class="feedback-modal" catchtap="noop">
-      <text class="feedback-modal-title">📮 问题反馈</text>
+      <view class="feedback-modal-title ic-row">
+        <view class="ic ic-16 ic-mail"></view>
+        <text>问题反馈</text>
+      </view>
       <textarea
         class="feedback-textarea"
         value="{{feedbackText}}"
@@ -64,7 +73,10 @@
       ></textarea>
       <text class="feedback-count">{{feedbackText.length}} / 500</text>
       <view class="feedback-page" wx:if="{{feedbackPage}}">
-        <text>📄 当前页面：{{feedbackPage}}</text>
+        <view class="ic-row">
+          <view class="ic ic-12 ic-file"></view>
+          <text>当前页面：{{feedbackPage}}</text>
+        </view>
       </view>
       <view class="feedback-actions">
         <button class="btn btn-ghost" bindtap="closeFeedbackModal">取消</button>

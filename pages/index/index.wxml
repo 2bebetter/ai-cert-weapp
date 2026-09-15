@@ -5,7 +5,10 @@
   </view>
 
   <view class="notice-card">
-    <text class="notice-title">⚠️ 免责声明</text>
+    <view class="notice-title ic-row">
+      <view class="ic ic-14 ic-alert"></view>
+      <text>免责声明</text>
+    </view>
     <text class="notice-body">
 本工具为个人备考练习程序，目前仅覆盖人工智能训练师（三级）的内容。
 题库参考上海交通大学职业技能认证平台（gjzs.sjtu.edu.cn）公开资料整理，对应人社部《人工智能训练师国家职业技能标准》。
@@ -51,13 +54,26 @@
   </view>
 
   <navigator url="/pages/exam/exam" class="exam-entry" hover-class="entry-card-hover">
-    <text class="exam-entry-label">📝 模拟考试</text>
+    <view class="exam-entry-label ic-row">
+      <view class="ic ic-18 ic-pen-primary"></view>
+      <text>模拟考试</text>
+    </view>
     <text class="exam-entry-desc">判断题40 + 单选题140 + 多选题10 · 限时90分钟</text>
-    <text class="exam-entry-arrow">›</text>
+    <view class="exam-entry-arrow ic ic-20 ic-chevronRight"></view>
   </navigator>
 
   <view class="footer-links">
-    <navigator url="/pages/review/review" class="footer-link">📕 错题本与复习</navigator>
-    <navigator url="/pages/settings/settings" open-type="switchTab" class="footer-link">⚙️ 设置</navigator>
+    <navigator url="/pages/review/review" class="footer-link">
+      <view class="ic-row">
+        <view class="ic ic-14 ic-book"></view>
+        <text>错题本与复习</text>
+      </view>
+    </navigator>
+    <navigator url="/pages/settings/settings" open-type="switchTab" class="footer-link">
+      <view class="ic-row">
+        <view class="ic ic-14 ic-settings"></view>
+        <text>设置</text>
+      </view>
+    </navigator>
   </view>
 </view>

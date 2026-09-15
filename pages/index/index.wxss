@@ -150,3 +150,5 @@
   color: var(--text-2);
   box-shadow: var(--shadow);
 }
+/* 页脚链接内的图标行居中 */
+.footer-link .ic-row { justify-content: center; }

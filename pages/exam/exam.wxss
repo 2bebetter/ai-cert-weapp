@@ -9,7 +9,7 @@
   box-shadow: var(--shadow);
   text-align: center;
 }
-.intro-icon { font-size: 48px; display: block; margin-bottom: 8px; }
+.intro-icon { display: block; margin: 0 auto 8px; }
 .intro-title { font-size: 18px; font-weight: 600; display: block; margin-bottom: 16px; }
 .intro-detail { margin-bottom: 20px; }
 .intro-row {
