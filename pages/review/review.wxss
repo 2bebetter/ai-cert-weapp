@@ -11,9 +11,7 @@
 .review-tab {
   flex: 1;
   text-align: center;
-  min-height: 44px;
-  box-sizing: border-box;
-  padding: 13px 0;
+  padding: 12px 0;
   font-size: 13px;
   color: var(--text-3);
   position: relative;
@@ -34,7 +32,7 @@
 }
 .tab-count {
   margin-left: 4px;
-  font-size: 12px;
+  font-size: 11px;
   background: var(--bg);
   padding: 1px 6px;
   border-radius: 8px;
@@ -52,8 +50,6 @@
   padding: 12px 14px;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
-  min-height: 44px;
-  box-sizing: border-box;
 }
 .review-card-hover { opacity: 0.8; }
 .review-top {
@@ -71,7 +67,7 @@
   margin-bottom: 8px;
 }
 .review-actions { display: flex; align-items: center; }
-.review-status { font-size: 12px; }
+.review-status { font-size: 11px; }
 .review-status.wrong { color: var(--danger); }
 .review-status.correct { color: var(--success); }
 .review-status.unattempted { color: var(--text-4); }

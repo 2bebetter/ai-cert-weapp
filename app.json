@@ -23,27 +23,19 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页",
-        "iconPath": "assets/tab/home.png",
-        "selectedIconPath": "assets/tab/home-on.png"
+        "text": "首页"
       },
       {
         "pagePath": "pages/theory/theory",
-        "text": "理论学习",
-        "iconPath": "assets/tab/book.png",
-        "selectedIconPath": "assets/tab/book-on.png"
+        "text": "理论学习"
       },
       {
         "pagePath": "pages/practical/practical",
-        "text": "实操学习",
-        "iconPath": "assets/tab/code.png",
-        "selectedIconPath": "assets/tab/code-on.png"
+        "text": "实操学习"
       },
       {
         "pagePath": "pages/settings/settings",
-        "text": "我的",
-        "iconPath": "assets/tab/user.png",
-        "selectedIconPath": "assets/tab/user-on.png"
+        "text": "我的"
       }
     ]
   },

@@ -353,11 +353,11 @@ export function getCodeReferenceLines(segments) {
 
 /** 通用常见错误提示 */
 export const COMMON_MISTAKES = [
-  '检查文件名、列名是否拼写正确（大小写敏感）',
-  '调用函数后记得加括号，如 read_csv() 不是 read_csv',
-  '赋值语句确认变量名一致，如 data = pd.read_csv(...)',
-  '字符串记得加引号，如 data[\'列名\']',
-  '检查导入语句：import pandas as pd / import numpy as np'
+  '⚠️ 检查文件名、列名是否拼写正确（大小写敏感）',
+  '⚠️ 调用函数后记得加括号，如 read_csv() 不是 read_csv',
+  '⚠️ 赋值语句确认变量名一致，如 data = pd.read_csv(...)',
+  '⚠️ 字符串记得加引号，如 data[\'列名\']',
+  '⚠️ 检查导入语句：import pandas as pd / import numpy as np'
 ]
 
 /**

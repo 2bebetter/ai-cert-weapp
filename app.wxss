@@ -1,71 +1,21 @@
-@import "styles/icons.wxss";
-
 /* 全局样式 - 参考现有项目 styles.css 的配色和布局体系 */
-/* ══════════════════════════════════════════════════════════
-   设计令牌 —— 所有颜色 / 圆角 / 阴影的唯一来源
-   规则：页面 wxss 里不再出现字面色值，一律引用本表令牌
-   ══════════════════════════════════════════════════════════ */
 page {
-  /* ── 品牌 ── */
-  --primary:       #007aff;
+  --primary: #007aff;
   --primary-light: #e8f0fe;
-  --primary-dark:  #2563eb;
-  --primary-deep:  #1f4e79;
-  --primary-soft:  #eef2ff;
-  --primary-deep-soft: rgba(31, 78, 121, 0.09);
-
-  /* ── 语义状态 ── */
-  --success:       #34c759;
-  --success-bg:    #e8f8ee;
-  --success-text:  #1a7d36;
-  --warning:       #ff9500;
-  --warning-bg:    #fff4e0;
-  --warning-text:  #b86200;
-  --warning-border:#ffe7a3;
-  --danger:        #ff3b30;
-  --danger-bg:     #ffe8e6;
-  --danger-text:   #b8201a;
-
-  /* ── 表面 ── */
-  --bg:            #f5f5f7;
-  --bg-soft:       #f8fafc;
-  --card-bg:       #ffffff;
-  --border:        #e5e5ea;
-  --border-soft:   #eef0f3;
-  --border-strong: #d7dce5;
-  --overlay:       rgba(0, 0, 0, 0.4);
-
-  /* ── 文字（由深到浅）── */
-  --text-1:        #1d1d1f;
-  --text-2:        #3a3a3c;
-  --text-3:        #6b7280;
-  --text-4:        #8e8e93;
-  --text-5:        #aeaeb2;
-
-  /* ── 代码作答区（深色）── */
-  --code-bg:        #1e2530;
-  --code-line:      #5c6b80;
-  --code-text:      #d6deeb;
-  --code-key:       #ffd479;
-  --code-key-soft:  rgba(255, 212, 121, 0.12);
-  --code-ok:        #6ee7a0;
-  --code-ok-line:   rgba(110, 231, 160, 0.4);
-  --code-ok-soft:   rgba(31, 157, 85, 0.18);
-  --code-err:       #fca5a5;
-  --code-err-line:  rgba(252, 165, 165, 0.4);
-  --code-err-soft:  rgba(214, 69, 69, 0.18);
-
-  /* ── 圆角 / 阴影 ── */
-  --radius:    12px;
+  --success: #34c759;
+  --warning: #ff9500;
+  --danger: #ff3b30;
+  --text-1: #1d1d1f;
+  --text-2: #3a3a3c;
+  --text-3: #8e8e93;
+  --text-4: #aeaeb2;
+  --bg: #f5f5f7;
+  --card-bg: #ffffff;
+  --border: #e5e5ea;
+  --radius: 12px;
   --radius-sm: 8px;
-  --shadow:    0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.06);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-
-  /* ── 版式 / 动效 ── */
-  --dur: 200ms;
-  --ease: cubic-bezier(0.4, 0, 0.2, 1);
-
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
   font-size: 14px;
   color: var(--text-1);
   background: var(--bg);
@@ -86,19 +36,17 @@ page {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  box-sizing: border-box;
   padding: 8px 20px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   border: none;
-  transition: opacity var(--dur) var(--ease);
+  transition: opacity 0.2s;
 }
 .btn:active { opacity: 0.7; }
 .btn-primary {
   background: var(--primary);
-  color: var(--card-bg);
+  color: #fff;
 }
 .btn-secondary {
   background: var(--primary-light);
@@ -110,37 +58,25 @@ page {
 }
 .btn-danger {
   background: var(--danger);
-  color: var(--card-bg);
+  color: #fff;
 }
 .btn-sm { padding: 4px 12px; font-size: 12px; }
 .btn-block { width: 100%; }
 .btn[disabled] { opacity: 0.4; }
-
-/* ── 触控目标：视觉尺寸不变，命中区扩到 44×44 ── */
-.btn-sm { position: relative; }
-.btn-sm::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 44px;
-  height: 44px;
-  transform: translate(-50%, -50%);
-}
 
 /* 标签 */
 .tag {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   background: var(--primary-light);
   color: var(--primary);
 }
-.tag-success { background: var(--success-bg); color: var(--success); }
-.tag-warning { background: var(--warning-bg); color: var(--warning); }
-.tag-danger { background: var(--danger-bg); color: var(--danger); }
+.tag-success { background: #e8f8ee; color: var(--success); }
+.tag-warning { background: #fff4e0; color: var(--warning); }
+.tag-danger { background: #ffe8e6; color: var(--danger); }
 
 /* 选项 */
 .option {
@@ -151,15 +87,15 @@ page {
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--card-bg);
-  transition: all var(--dur) var(--ease);
+  transition: all 0.15s;
   font-size: 14px;
   line-height: 1.5;
 }
 .option:active { border-color: var(--primary); }
 .option radio, .option checkbox { margin-right: 10px; margin-top: 1px; flex-shrink: 0; }
 .option.selected { border-color: var(--primary); background: var(--primary-light); }
-.option.correct { border-color: var(--success); background: var(--success-bg); }
-.option.wrong { border-color: var(--danger); background: var(--danger-bg); }
+.option.correct { border-color: var(--success); background: #e8f8ee; }
+.option.wrong { border-color: var(--danger); background: #ffe8e6; }
 
 /* 反馈 */
 .feedback {
@@ -169,9 +105,9 @@ page {
   font-size: 13px;
   line-height: 1.6;
 }
-.feedback.ok { background: var(--success-bg); color: var(--success-text); }
-.feedback.bad { background: var(--danger-bg); color: var(--danger-text); }
-.feedback.warn { background: var(--warning-bg); color: var(--warning-text); }
+.feedback.ok { background: #e8f8ee; color: #1a7d36; }
+.feedback.bad { background: #ffe8e6; color: #b8201a; }
+.feedback.warn { background: #fff4e0; color: #b86200; }
 
 /* 多行文本省略 */
 .ellipsis {
@@ -237,29 +173,3 @@ page {
   font-size: 13px;
   color: var(--text-3);
 }
-/* 按钮内的图标 + 文字行：水平居中 */
-.btn .ic-row { justify-content: center; }
-
-/* ══════════════════════════════════════════════════════════
-   动效：统一 200ms（--dur / --ease）
-   ══════════════════════════════════════════════════════════ */
-@keyframes overlay-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes modal-in {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* 按钮按下反馈 */
-.btn { transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease); }
-.btn:active { transform: scale(0.97); }
-
-/* 列表卡片 / 选项 */
-.card { transition: background var(--dur) var(--ease); }
-.option { transition: all var(--dur) var(--ease); }

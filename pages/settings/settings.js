@@ -1,6 +1,5 @@
 import { getAIConfig, saveAIConfig } from '../../utils/storage'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
-import * as haptic from '../../utils/haptics'
 
 Page({
   data: {
@@ -31,14 +30,12 @@ Page({
       apiKey: this.data.apiKey.trim(),
       model: this.data.model.trim()
     })
-    haptic.success()
     wx.showToast({ title: '配置已保存', icon: 'success' })
   },
 
   async testConnection() {
     const { apiKey, baseUrl, model } = this.data
     if (!apiKey) {
-      haptic.warn()
       this.setData({ testResult: { ok: false, msg: '请先填写 API Key' } })
       return
     }
@@ -52,7 +49,7 @@ Page({
       })
 
       if (res.result && res.result.ok) {
-        this.setData({ testResult: { ok: true, msg: '连接成功' } })
+        this.setData({ testResult: { ok: true, msg: '连接成功 ✓' } })
       } else {
         this.setData({ testResult: { ok: false, msg: res.result?.error || '连接失败' } })
       }
@@ -108,7 +105,6 @@ Page({
   async submitFeedback() {
     const text = (this.data.feedbackText || '').trim()
     if (!text) {
-      haptic.warn()
       wx.showToast({ title: '请先填写反馈内容', icon: 'none' })
       return
     }
@@ -125,7 +121,6 @@ Page({
       })
       wx.hideLoading()
       if (res.result && res.result.code === 0) {
-        haptic.success()
         this.setData({ feedbackModalVisible: false, feedbackText: '' })
         wx.showToast({ title: '感谢反馈！', icon: 'success' })
       } else {

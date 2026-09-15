@@ -1,7 +1,6 @@
 import { buildTheoryExam, scoreTheoryExam, scoreTheory, getTypeLabel } from '../../utils/domain'
 import { getExamSessions, saveExamSession, saveExam, getSavedExam, clearSavedExam } from '../../utils/storage'
 import { EXAM_DURATION, EXAM_QUOTAS } from '../../utils/constants'
-import * as haptic from '../../utils/haptics'
 
 Page({
   data: {
@@ -55,11 +54,9 @@ Page({
     const app = getApp()
     const questions = app.globalData.theoryQuestions
     if (!questions || !questions.length) {
-      haptic.warn()
       wx.showToast({ title: '题库未加载，请稍后', icon: 'none' })
       return
     }
-    haptic.success()
 
     // 检查题目数量
     const quotas = EXAM_QUOTAS
@@ -138,7 +135,6 @@ Page({
   },
 
   selectOption(e) {
-    haptic.tap()
     const key = e.currentTarget.dataset.key
     const q = this.data.currentQuestion
     const answers = { ...this.data.answers }
@@ -181,7 +177,6 @@ Page({
     const marked = new Set(this.data.marked)
     if (marked.has(q.id)) marked.delete(q.id)
     else marked.add(q.id)
-    haptic.tap()
     this.setData({ marked, isMarked: marked.has(q.id) })
   },
 
@@ -241,7 +236,6 @@ Page({
   },
 
   toggleNavigator() {
-    haptic.tap()
     this.setData({ navigatorOpen: !this.data.navigatorOpen })
   },
 
@@ -314,7 +308,6 @@ Page({
       examResult: report,
       navigatorOpen: false
     })
-    haptic.success()
 
     wx.showToast({ title: `得分：${score}/${maxScore}`, icon: 'none', duration: 3000 })
   }

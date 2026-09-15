@@ -1,8 +1,8 @@
 <view class="page">
-  <!-- 考试未开始：介绍页 -->
+  <!-- 考试未开始 → 介绍页 -->
   <view wx:if="{{!examStarted}}" class="intro">
     <view class="intro-card">
-      <view class="intro-icon ic ic-48 ic-pen-primary"></view>
+      <text class="intro-icon">📝</text>
       <text class="intro-title">理论模拟考试</text>
       <view class="intro-detail">
         <view class="intro-row"><text>判断题</text><text>40 题</text></view>
@@ -34,7 +34,7 @@
         <text>{{timerDisplay}}</text>
       </view>
       <button class="btn-ghost btn-sm" bindtap="toggleMark">
-        <view class="ic ic-18 {{isMarked ? 'ic-starOn' : 'ic-star'}}"></view>
+        {{isMarked ? '★' : '☆'}}
       </button>
     </view>
 
@@ -72,7 +72,7 @@
 
     <!-- 题号导航（悬浮按钮） -->
     <view class="exam-nav-btn" bindtap="toggleNavigator">
-      <view class="ic ic-20 ic-clipboard"></view>
+      <text>📋</text>
     </view>
 
     <!-- 题号面板 -->
@@ -104,7 +104,7 @@
   <view wx:if="{{examFinished}}" class="result-page">
     <!-- 结果展示，后续完善 -->
     <view class="empty-state">
-      <view class="ic ic-48 ic-checkCircle"></view>
+      <text>🎉</text>
       <text>考试完成！得分：{{examResult.score}} / {{examResult.maxScore}}</text>
     </view>
   </view>

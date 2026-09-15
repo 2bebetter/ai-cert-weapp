@@ -2,7 +2,6 @@ import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '.
 import { loadTemplates } from '../../utils/templates'
 import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswers, extractKeywords, gradeByScorePoints, parseQuestionSections, splitHighlight, splitInlineCode } from '../../utils/domain'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
-import * as haptic from '../../utils/haptics'
 
 const UI_STATE_KEY = 'practical_ui_state'
 const VISIBLE_TASKS = 3   // 收起时显示的任务条数
@@ -332,7 +331,6 @@ Page({
   saveDraft() {
     const task = this.data.task
     if (!task) return
-    haptic.tap()
 
     const answerMap = {
       code: { blanks: this.data.blankValues },
@@ -405,15 +403,10 @@ Page({
 
     // 记一次完成，列表页的徽章 / 进度 / 得分随之更新
     this.markSubmitted(result.total_score, result.autoMax || result.maxScore)
-
-    // 全对给一次成功反馈，有错给一次警示
-    if (result.total_score >= (result.autoMax || result.maxScore)) haptic.success()
-    else haptic.warn()
   },
 
   /** 点击标准答案 → 打开解析弹窗 */
   openBlankAnalysis(e) {
-    haptic.tap()
     const blankId = e.currentTarget.dataset.blankId
     const item = this.data.blankAnswers.find((ba) => ba.blankId === blankId)
     if (item) {
@@ -438,7 +431,6 @@ Page({
   async submitGrade() {
     const task = this.data.task
     const config = getAIConfig()
-    haptic.tap()
 
     // 混合题：拆成代码部分(按评分点判分) + 文档部分(AI)
     if (task.type === 'mixed') {

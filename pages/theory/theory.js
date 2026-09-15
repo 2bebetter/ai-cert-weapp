@@ -5,7 +5,6 @@ import {
   addWrongBook, removeWrongBook, getWrongBook,
   saveTheoryNote, getNotes
 } from '../../utils/storage'
-import * as haptic from '../../utils/haptics'
 
 const PROGRESS_KEY = 'theory_progress'
 
@@ -201,7 +200,6 @@ Page({
 
     const renderOptions = this.buildRenderOptions(this.data.currentQuestion, selectedKeys, false)
     this.setData({ selectedKeys, renderOptions })
-    haptic.tap()
   },
 
   submitAnswer() {
@@ -218,7 +216,6 @@ Page({
         feedback: { class: 'warn', title: '答案待核对', body: '该题没有可验证的参考答案，当前不会判定对错。' },
         renderOptions: this.buildRenderOptions(question, this.data.selectedKeys, true)
       })
-      haptic.tap()
       return
     }
 
@@ -232,10 +229,6 @@ Page({
       },
       renderOptions: this.buildRenderOptions(question, this.data.selectedKeys, true)
     })
-
-    // 答对 / 答错：一次明确的触觉反馈
-    if (result.correct) haptic.success()
-    else haptic.warn()
 
     addTheoryAttempt({
       id: `${question.id}_${Date.now()}`,
@@ -251,7 +244,6 @@ Page({
 
   /** 右上角图标统一分发 */
   onHeadAction(e) {
-    haptic.tap()
     const action = e.currentTarget.dataset.action
     if (action === 'wrongbook') this.toggleWrongBook()
     else if (action === 'note') this.openNoteModal()
@@ -316,7 +308,6 @@ Page({
         noteModalVisible: false,
         hasNote: !!this.data.noteText
       })
-      haptic.success()
       wx.showToast({ title: '笔记已保存', icon: 'success' })
     } catch (e) {
       console.warn('saveNote 失败', e)
@@ -396,11 +387,9 @@ Page({
     const total = this.data.filtered.length
     const n = parseInt(this.data.jumpValue, 10)
     if (!n || isNaN(n) || n < 1 || n > total) {
-      haptic.warn()
       wx.showToast({ title: '请输入 1 - ' + total, icon: 'none' })
       return
     }
-    haptic.tap()
     this.setData({ jumpVisible: false, resumedFrom: 0 })
     this.goToIndex(n - 1)
   },

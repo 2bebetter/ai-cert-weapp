@@ -9,7 +9,7 @@
   box-shadow: var(--shadow);
   text-align: center;
 }
-.intro-icon { display: block; margin: 0 auto 8px; }
+.intro-icon { font-size: 48px; display: block; margin-bottom: 8px; }
 .intro-title { font-size: 18px; font-weight: 600; display: block; margin-bottom: 16px; }
 .intro-detail { margin-bottom: 20px; }
 .intro-row {
@@ -112,7 +112,7 @@
   height: 44px;
   border-radius: 22px;
   background: var(--primary);
-  color: var(--card-bg);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -125,28 +125,12 @@
 .exam-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--overlay);
+  background: rgba(0,0,0,0.4);
   z-index: 30;
   display: flex;
   align-items: flex-end;
 }
-.exam-overlay {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
-}
-.exam-overlay.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-.exam-navigator {
-  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
-}
-.exam-overlay.hidden .exam-navigator {
-  opacity: 0;
-  transform: translateY(14px) scale(0.98);
-}
+.exam-overlay.hidden { display: none; }
 .exam-navigator {
   background: var(--card-bg);
   border-radius: var(--radius) var(--radius) 0 0;
@@ -169,26 +153,16 @@
   gap: 4px;
 }
 .nav-num {
-  position: relative;
   text-align: center;
-  padding: 13px 0;
+  padding: 6px 0;
   border-radius: 4px;
   font-size: 13px;
   background: var(--bg);
   color: var(--text-2);
 }
 .nav-num.answered { background: var(--primary-light); color: var(--primary); }
-.nav-num.current { background: var(--primary); color: var(--card-bg); }
-.nav-num.marked::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--warning);
-}
+.nav-num.current { background: var(--primary); color: #fff; }
+.nav-num.marked::after { content: '★'; font-size: 8px; color: #f5c518; margin-left: 1px; }
 
 /* 结果页 */
 .result-page { padding: 24px 16px; }

@@ -25,7 +25,7 @@
     >
       <view class="review-top">
         <text class="tag {{item.typeClass}}">{{item.typeLabel}}</text>
-        <view class="ic ic-14 ic-pen" wx:if="{{item.hasNote}}"></view>
+        <text class="review-note-count" wx:if="{{item.hasNote}}">📝</text>
       </view>
       <text class="review-text ellipsis-2">{{item.text}}</text>
       <view class="review-actions">
@@ -36,7 +36,7 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:else>
-    <view class="ic ic-40 ic-checkCircle"></view>
+    <text>🎉</text>
     <text>当前分类下暂无题目</text>
     <text class="placeholder">完成刷题后会在这里生成复习题目</text>
   </view>
