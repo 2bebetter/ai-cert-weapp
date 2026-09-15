@@ -5,55 +5,116 @@
     <text class="loading-text">加载题库中…</text>
   </view>
 
-  <block wx:else>
-    <!-- 筛选栏 -->
+  <view class="content" wx:else>
+    <!-- ═══════════ 页面标题 ═══════════ -->
+    <view class="page-title">实操学习</view>
+
+    <!-- ═══════════ 1. 筛选下拉（页面第一个操作区） ═══════════ -->
     <view class="filter-bar">
       <picker mode="selector" range="{{taskStatuses}}" bindchange="onStatusFilter">
         <view class="filter-btn">
           <text>{{taskStatuses[statusIndex]}}</text>
-          <text class="arrow">▼</text>
+          <view class="arrow"></view>
         </view>
       </picker>
       <picker mode="selector" range="{{taskTypes}}" bindchange="onTypeFilter">
         <view class="filter-btn">
           <text>{{taskTypes[typeIndex]}}</text>
-          <text class="arrow">▼</text>
+          <view class="arrow"></view>
         </view>
       </picker>
-      <text class="filter-info">{{tasks.length}} 项</text>
+      <text class="filter-info">{{filteredCount}} 项</text>
     </view>
 
-    <!-- 进度概览 -->
-    <view class="progress-mini" wx:if="{{progress}}">
-      <view class="progress-item"><text class="num">{{progress.practiced}}</text><text>已练习</text></view>
-      <view class="progress-item"><text class="num">{{progress.inProgress}}</text><text>进行中</text></view>
-      <view class="progress-item"><text class="num">{{progress.unattempted}}</text><text>未开始</text></view>
-    </view>
-
-    <!-- 任务列表 -->
-    <scroll-view scroll-y class="task-scroll" wx:if="{{tasks.length}}">
-      <view
-        wx:for="{{tasks}}"
-        wx:key="id"
-        class="task-card"
-        bindtap="openTask"
-        data-id="{{item.id}}"
-        hover-class="task-card-hover"
-      >
-        <text class="task-title">{{item.title}}</text>
-        <view class="task-meta">
-          <text class="task-type {{item.type === 'code' ? 'tag' : (item.type === 'mixed' ? 'tag tag-purple' : 'tag tag-warning')}}">
-            {{item.type === 'code' ? '代码填空' : (item.type === 'mixed' ? '混合题' : '文档作答')}}
-          </text>
-          <text class="task-status unattempted">未开始</text>
+    <!-- ═══════════ 2. 推荐练习（最多 2 条，无则不显示） ═══════════ -->
+    <view class="card recommend-card" wx:if="{{recommend.length}}">
+      <view class="card-title">
+        <view class="icon-pin"></view>
+        <text>推荐练习</text>
+      </view>
+      <view class="rec-list">
+        <view
+          wx:for="{{recommend}}"
+          wx:key="id"
+          class="rec-item"
+        >
+          <view class="rec-main" bindtap="openTask" data-id="{{item.id}}">
+            <text class="rec-name">{{item.short}}</text>
+            <text class="rec-reason">{{item.reason}}</text>
+          </view>
+          <view class="rec-btn" catchtap="openTask" data-id="{{item.id}}">{{item.action}}</view>
         </view>
       </view>
-    </scroll-view>
+    </view>
+
+    <!-- ═══════════ 3. 统计数据 ═══════════ -->
+    <view class="card stats-card">
+      <view class="stat-item">
+        <text class="stat-num stat-done">{{stats.practiced}}</text>
+        <text class="stat-label">已练习</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num stat-doing">{{stats.inProgress}}</text>
+        <text class="stat-label">进行中</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num stat-new">{{stats.unattempted}}</text>
+        <text class="stat-label">未开始</text>
+      </view>
+    </view>
+
+    <!-- ═══════════ 4. 按题型折叠分组的题目列表 ═══════════ -->
+    <block wx:if="{{groups.length}}">
+      <view wx:for="{{groups}}" wx:for-item="group" wx:key="name" class="group">
+        <!-- 分组头 -->
+        <view class="group-head" bindtap="toggleGroup" data-name="{{group.name}}">
+          <view class="group-arrow {{group.collapsed ? '' : 'open'}}"></view>
+          <text class="group-name">{{group.name}}</text>
+          <text class="group-count">(总题数 {{group.total}}，已完成 {{group.done}})</text>
+        </view>
+
+        <!-- 分组内题目卡片 -->
+        <view class="group-body" wx:if="{{!group.collapsed}}">
+          <view
+            wx:for="{{group.tasks}}"
+            wx:for-item="task"
+            wx:key="id"
+            class="task-card"
+            bindtap="openTask"
+            data-id="{{task.id}}"
+            hover-class="task-card-hover"
+          >
+            <!-- 主标题（精简）+ 副标题（完整原题名称） -->
+            <view class="task-head">
+              <text class="task-title">{{task.short}}</text>
+              <text class="task-badge {{task.statusBadge}}">{{task.statusLabel}}</text>
+            </view>
+            <view class="task-sub">{{task.full}}</view>
+
+            <!-- 标签行 -->
+            <view class="task-meta">
+              <text class="task-type {{task.type === 'code' ? 'tag' : (task.type === 'mixed' ? 'tag tag-purple' : 'tag tag-warning')}}">
+                {{task.typeLabel}}
+              </text>
+              <text class="task-variant" wx:if="{{task.variant}}">{{task.variant}}</text>
+              <text class="task-variant" wx:if="{{!task.hasTemplate}}">模板待补充</text>
+              <text class="task-score">{{task.scoreTotal}} 分</text>
+            </view>
+
+            <!-- 进行中才显示进度 -->
+            <view class="task-progress" wx:if="{{task.progressText}}">{{task.progressText}}</view>
+          </view>
+        </view>
+      </view>
+    </block>
 
     <!-- 空状态 -->
     <view class="empty-state" wx:else>
-      <text>🔧</text>
-      <text>暂无符合条件的实操任务</text>
+      <view class="icon-empty"></view>
+      <text class="empty-title">暂无符合条件的实操任务</text>
+      <text class="placeholder">换个筛选条件试试</text>
     </view>
-  </block>
+  </view>
 </view>

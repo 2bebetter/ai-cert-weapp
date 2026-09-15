@@ -1,4 +1,5 @@
 import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
+import { loadTemplates } from '../../utils/templates'
 import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswers, extractKeywords, gradeByScorePoints, parseQuestionSections, splitHighlight, splitInlineCode } from '../../utils/domain'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
@@ -189,19 +190,58 @@ Page({
   },
 
   async loadTemplates() {
-    try {
-      const res = await wx.cloud.callFunction({ name: 'getTemplates' })
-      if (res.result && !res.result.error && typeof res.result === 'object') return res.result
-    } catch (err) {
-      console.warn('getTemplates 云函数不可用:', err.message)
+    return loadTemplates()
+  },
+
+  /**
+   * 当前作答进度：填了多少 / 总共多少
+   * 供列表页展示「进度XX%」
+   */
+  computeProgress() {
+    const type = this.data.task ? this.data.task.type : ''
+    if (type === 'document') {
+      if (this.data.docSections.length) {
+        const total = this.data.docSections.length
+        const filled = this.data.docSections.filter((s) => String(s.value || '').trim()).length
+        return { filled, total }
+      }
+      return { filled: String(this.data.answer || '').trim() ? 1 : 0, total: 1 }
     }
-    try {
-      const fs = wx.getFileSystemManager()
-      const content = fs.readFileSync(`${wx.env.USER_DATA_PATH}/code-templates.json`, 'utf-8')
-      return JSON.parse(content)
-    } catch {
-      return {}
+
+    const segments = (this.templates && this.templates[this.questionId] && this.templates[this.questionId].segments) || []
+    const blankIds = segments.filter((x) => x.kind === 'blank').map((x) => x.id)
+    const filledBlanks = blankIds.filter((id) => String(this.data.blankValues[id] || '').trim()).length
+
+    if (type === 'mixed') {
+      const docFilled = String(this.data.docAnswer || '').trim() ? 1 : 0
+      return { filled: filledBlanks + docFilled, total: blankIds.length + 1 }
     }
+    return { filled: filledBlanks, total: blankIds.length || 1 }
+  },
+
+  /** 记录一次完成（列表页据此显示「已练习」+ 得分） */
+  markSubmitted(score, maxScore) {
+    const task = this.data.task
+    if (!task) return
+    const answerMap = {
+      code: { blanks: this.data.blankValues },
+      document: this.data.docSections.length
+        ? { sections: this.data.docSections.map((x) => ({ id: x.key, value: x.value })) }
+        : { text: this.data.answer },
+      mixed: { blanks: this.data.blankValues, docText: this.data.docAnswer }
+    }
+    savePracticalSubmission({
+      id: `practical:${task.id}:submitted`,
+      questionId: task.id,
+      canonicalId: task.id,
+      type: task.type,
+      answer: answerMap[task.type] || {},
+      status: 'submitted',
+      score: Number(score) || 0,
+      maxScore: Number(maxScore) || 0,
+      progress: this.computeProgress(),
+      submittedAt: new Date().toISOString()
+    })
   },
 
   splitSegmentsToLines(segments) {
@@ -307,6 +347,7 @@ Page({
       type: task.type,
       answer: answerMap[task.type] || {},
       status: 'draft',
+      progress: this.computeProgress(),
       savedAt: new Date().toISOString()
     })
     wx.showToast({ title: '草稿已保存', icon: 'success' })
@@ -359,6 +400,9 @@ Page({
       verified: true,
       currentAnalysis: null
     })
+
+    // 记一次完成，列表页的徽章 / 进度 / 得分随之更新
+    this.markSubmitted(result.total_score, result.autoMax || result.maxScore)
   },
 
   /** 点击标准答案 → 打开解析弹窗 */
@@ -506,6 +550,7 @@ Page({
       this.setData({
         gradeResult: { total_score: result.total_score, maxScore, items: result.items, mode: 'ai' }
       })
+      this.markSubmitted(result.total_score, maxScore)
     } catch (err) {
       wx.hideLoading()
       this.setData({ gradeResult: { error: err.message } })
