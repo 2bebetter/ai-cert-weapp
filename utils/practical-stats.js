@@ -227,9 +227,10 @@ export function buildRecommendations(tasks) {
 
 /**
  * 按题型分组
- * @param {Boolean} collapsedMap { [分组名]: true } 表示该组被折叠
+ * 默认全部折叠；只记录用户手动展开过的分组
+ * @param {Object} expandedMap { [分组名]: true } 表示该组被展开
  */
-export function buildGroups(tasks, collapsedMap) {
+export function buildGroups(tasks, expandedMap) {
   const map = new Map()
   ;(tasks || []).forEach((t) => {
     if (!map.has(t.category)) map.set(t.category, [])
@@ -247,7 +248,7 @@ export function buildGroups(tasks, collapsedMap) {
       name,
       total: list.length,
       done: list.filter((t) => t.status === 'done').length,
-      collapsed: !!(collapsedMap && collapsedMap[name]),
+      collapsed: !(expandedMap && expandedMap[name]),
       tasks: list
     })
   }

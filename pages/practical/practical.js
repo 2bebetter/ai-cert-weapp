@@ -8,7 +8,7 @@ import {
   buildGroups
 } from '../../utils/practical-stats'
 
-const COLLAPSE_KEY = 'practical_group_collapsed'
+const EXPAND_KEY = 'practical_group_expanded'
 
 Page({
   data: {
@@ -36,7 +36,7 @@ Page({
    */
   async onPullDownRefresh() {
     try {
-      wx.removeStorageSync(COLLAPSE_KEY)
+      wx.removeStorageSync(EXPAND_KEY)
     } catch (e) { /* 忽略 */ }
     await this.loadTasks(true)
     wx.stopPullDownRefresh()
@@ -76,19 +76,19 @@ Page({
     const allTasks = this.allTasks || []
     const filtered = applyTaskFilters(allTasks, this.data.statusIndex, this.data.typeIndex)
 
-    // 折叠状态本地缓存（默认全部展开）
-    let collapsedMap = {}
+    // 展开状态本地缓存（默认全部折叠，只记展开过的组）
+    let expandedMap = {}
     try {
-      collapsedMap = wx.getStorageSync(COLLAPSE_KEY) || {}
+      expandedMap = wx.getStorageSync(EXPAND_KEY) || {}
     } catch (e) {
-      collapsedMap = {}
+      expandedMap = {}
     }
 
     this.setData({
       filteredCount: filtered.length,
       stats: buildStats(filtered),
       recommend: buildRecommendations(filtered),
-      groups: buildGroups(filtered, collapsedMap)
+      groups: buildGroups(filtered, expandedMap)
     })
   },
 
@@ -103,20 +103,20 @@ Page({
     this.refresh()
   },
 
-  /* ── 分组折叠 ── */
+  /* ── 分组展开 / 折叠（默认折叠） ── */
   toggleGroup(e) {
     const name = e.currentTarget.dataset.name
     if (!name) return
     let map = {}
     try {
-      map = wx.getStorageSync(COLLAPSE_KEY) || {}
+      map = wx.getStorageSync(EXPAND_KEY) || {}
     } catch (err) {
       map = {}
     }
     if (map[name]) delete map[name]
     else map[name] = true
     try {
-      wx.setStorageSync(COLLAPSE_KEY, map)
+      wx.setStorageSync(EXPAND_KEY, map)
     } catch (err) { /* 忽略 */ }
     this.refresh()
   },
