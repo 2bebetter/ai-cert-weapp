@@ -13,9 +13,10 @@ page {
 }
 
 /* ── 内容容器：最大 760px，页面居中 ── */
+/* 内容容器：三张卡片共用这一条宽度 */
 .content {
-  width: 94%;
-  max-width: 760px;
+  width: 96%;
+  max-width: 1040px;   /* 窄屏吃满、宽屏不被 760px 卡死 */
   margin: 0 auto;
   padding: 20px 0 40px;
   box-sizing: border-box;
@@ -25,7 +26,7 @@ page {
 .card {
   background: #ffffff;
   border-radius: 8px;
-  padding: 16px;
+  padding: 14px;
   margin-bottom: 20px;
   box-sizing: border-box;
   overflow: hidden;
@@ -320,12 +321,13 @@ page {
 }
 
 /* ══════════ 3. 代码作答区 ══════════ */
+/* 作答区：与其它卡片同宽同内边距（原来是左16/右0 + margin-right 的补丁） */
 .answer-section {
-  padding: 16px 0 16px 16px;
+  padding: 14px;
 }
 
 .answer-section .card-head {
-  padding-right: 16px;
+  padding-right: 0;
 }
 
 /* 代码容器：max-height 420px，内部纵向滚动 */
@@ -333,7 +335,6 @@ page {
   max-height: 560px;   /* 代码区高度：560px ≈ 19 行；想再高改这一行 */
   background: #1e2530;
   border-radius: 8px;
-  margin-right: 16px;
   box-sizing: border-box;
   /* 横向滚动：内容不换行，由 scroll-view 承载横向溢出 */
   white-space: nowrap;
@@ -572,7 +573,7 @@ page {
   font-weight: 600;
   color: #374151;
   line-height: 20px;
-  margin: 16px 16px 8px 0;
+  margin: 16px 0 8px;
 }
 
 .doc-section {
@@ -584,7 +585,7 @@ page {
   min-height: 110px;
   box-sizing: border-box;
   padding: 10px 12px;
-  margin-right: 16px;
+  /* width:100% 不能再加 margin-right，否则溢出卡片被裁掉 */
   background: #f8fafc;
   border: 1px solid #e5e9f0;
   border-radius: 6px;
@@ -671,7 +672,7 @@ page {
 
 .analysis-modal {
   width: 92%;
-  max-width: 720px;
+  max-width: 860px;
   max-height: 70vh;
   background: #ffffff;
   border-radius: 8px;

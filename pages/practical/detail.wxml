@@ -97,12 +97,12 @@
       </view>
     </view>
 
-    <!-- ═══════════ 3. 代码作答区 ═══════════ -->
+    <!-- ═══════════ 3. 作答区（代码 / 文档） ═══════════ -->
     <view class="card answer-section">
       <view class="card-head static">
         <view class="card-head-left">
           <view class="icon-code"></view>
-          <text class="card-title">代码作答区</text>
+          <text class="card-title">作答区</text>
         </view>
         <text class="head-hint" wx:if="{{task.type === 'mixed'}}">代码部分</text>
       </view>
