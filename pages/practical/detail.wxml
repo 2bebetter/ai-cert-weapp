@@ -126,9 +126,25 @@
           </scroll-view>
 
           <!-- 验证结果总分行 -->
-          <view wx:if="{{verified}}" class="verify-summary {{gradeResult.total_score === gradeResult.maxScore ? 'summary-pass' : 'summary-fail'}}">
-            <text>{{gradeResult.total_score}} / {{gradeResult.maxScore}} 分</text>
-            <text class="summary-count">点击填空查看解析</text>
+          <view wx:if="{{verified}}" class="verify-summary {{gradeResult.total_score === gradeResult.autoMax ? 'summary-pass' : 'summary-fail'}}">
+            <text>{{gradeResult.total_score}} / {{gradeResult.autoMax}} 分</text>
+            <text class="summary-count">{{gradeResult.docMax ? '文档题 ' + gradeResult.docMax + ' 分需 AI 判题 · ' : ''}}点击填空查看解析</text>
+          </view>
+
+          <!-- 评分点明细 -->
+          <view wx:if="{{verified && gradeResult.items.length}}" class="point-list">
+            <view
+              wx:for="{{gradeResult.items}}"
+              wx:key="id"
+              class="point-row {{item.score === item.max_score ? 'point-full' : (item.score > 0 ? 'point-part' : 'point-zero')}}"
+            >
+              <text class="point-badge">{{item.score}}/{{item.max_score}}</text>
+              <text class="point-desc">{{item.desc}}</text>
+            </view>
+            <view wx:if="{{gradeResult.docItems.length}}" class="point-row point-doc">
+              <text class="point-badge">AI</text>
+              <text class="point-desc">文档题 {{gradeResult.docMax}} 分需 AI 判题</text>
+            </view>
           </view>
         </block>
         <block wx:else>

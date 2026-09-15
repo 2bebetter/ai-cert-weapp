@@ -321,3 +321,30 @@
 
 /* 参考答案（旧版，弃用保留） */
 .reference-section { display: none; }
+/* 评分点明细 */
+.point-list {
+  margin-top: 10px;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.point-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; }
+.point-row + .point-row { border-top: 1px solid var(--border); }
+.point-badge {
+  flex: 0 0 auto;
+  min-width: 40px;
+  padding: 1px 5px;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.point-desc { flex: 1; font-size: 12px; line-height: 18px; color: var(--text-2); }
+.point-full .point-badge { background: #e8f8ee; color: #1f9d55; }
+.point-part .point-badge { background: #fff8e1; color: #b7791f; }
+.point-zero .point-badge { background: #fdecec; color: #d64545; }
+.point-zero .point-desc { color: var(--text-3); }
+.point-doc .point-badge { background: #eef0f3; color: #6b7280; }
+.point-doc .point-desc { color: var(--text-3); }

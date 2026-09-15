@@ -1,5 +1,5 @@
 import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
-import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswers, extractKeywords } from '../../utils/domain'
+import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswers, extractKeywords, gradeByScorePoints } from '../../utils/domain'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 Page({
@@ -265,8 +265,6 @@ Page({
       return
     }
 
-    const userCode = this.assembleCode()
-    const result = gradeCodeTask(userCode, task.scoreItems)
     const blankValues = { ...this.data.blankValues }
     const refAns = this.templates?.[this.questionId]?.referenceAnswers || {}
     const blankAnswers = buildBlankAnswers(segments, blankValues, refAns)
@@ -279,8 +277,26 @@ Page({
       blankAnswerMap[ba.blankId] = ba.reference
     }
 
+    // 按「评分点 → 填空」映射判分：总分与填空红绿完全一致
+    let result = gradeByScorePoints(blankStatusMap, this.questionId)
+    if (!result || !result.items.length) {
+      // 该题无映射时回退到关键词判分
+      const userCode = this.assembleCode()
+      result = gradeCodeTask(userCode, task.scoreItems)
+      result.mode = 'rule'
+    } else {
+      // 补上评分点描述，便于展示明细
+      result = {
+        ...result,
+        items: result.items.map((it) => {
+          const src = (task.scoreItems || []).find((s) => s.id === it.id)
+          return { ...it, desc: src ? (src.desc || '') : '' }
+        })
+      }
+    }
+
     this.setData({
-      gradeResult: { total_score: result.total_score, maxScore: result.maxScore, items: result.items, mode: 'rule' },
+      gradeResult: result,
       blankAnswers,
       blankStatusMap,
       blankAnswerMap,
@@ -310,23 +326,35 @@ Page({
     const task = this.data.task
     const config = getAIConfig()
 
-    // 混合题：拆成代码部分(规则匹配) + 文档部分(AI)
+    // 混合题：拆成代码部分(按评分点判分) + 文档部分(AI)
     if (task.type === 'mixed') {
-      const userCode = this.assembleCode()
-      // 分离评分项：含 回答/规范/流程/描述 的走AI，其余走规则
-      const codeItems = []
-      const docItems = []
-      for (const item of (task.scoreItems || [])) {
-        const desc = item.desc || ''
-        if (/回答|规范|流程|描述/.test(desc)) docItems.push(item)
-        else codeItems.push(item)
+      const segments = this.templates?.[this.questionId]?.segments || []
+      const refAns = this.templates?.[this.questionId]?.referenceAnswers || {}
+      const blankAnswers = buildBlankAnswers(segments, this.data.blankValues || {}, refAns)
+      const blankStatusMap = {}
+      const blankAnswerMap = {}
+      for (const ba of blankAnswers) {
+        blankStatusMap[ba.blankId] = ba.status
+        blankAnswerMap[ba.blankId] = ba.reference
       }
 
-      let codeResult, aiResult
-      // 代码部分规则匹配
-      if (codeItems.length) {
-        codeResult = gradeCodeTask(userCode, codeItems)
+      // 代码部分：按「评分点 → 填空」映射判分
+      let codeResult = gradeByScorePoints(blankStatusMap, this.questionId)
+      let docItems = []
+      if (codeResult && codeResult.items.length) {
+        const docIds = new Set(codeResult.docItems)
+        docItems = (task.scoreItems || []).filter((i) => docIds.has(i.id))
+      } else {
+        // 无映射时回退：关键词判分 + 描述正则分离文档题
+        const codeItems = []
+        for (const item of (task.scoreItems || [])) {
+          if (/回答|规范|流程|描述/.test(item.desc || '')) docItems.push(item)
+          else codeItems.push(item)
+        }
+        codeResult = codeItems.length ? gradeCodeTask(this.assembleCode(), codeItems) : { total_score: 0, items: [] }
       }
+
+      let aiResult
       // 文档部分AI评测
       if (docItems.length && this.data.docAnswer.trim()) {
         if (!config.apiKey) {
@@ -371,7 +399,11 @@ Page({
           total_score: totalScore, maxScore, items: allItems,
           mode: 'mixed',
           error: aiResult?.error || null
-        }
+        },
+        blankAnswers,
+        blankStatusMap,
+        blankAnswerMap,
+        verified: true
       })
       return
     }

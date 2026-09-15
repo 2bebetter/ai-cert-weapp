@@ -1,6 +1,7 @@
 /**
  * 判分与统计纯函数 — 从现有项目直接迁移
  */
+import SCORE_MAPPING from './score-mapping.js'
 
 function normalized(keys) {
   return [...(keys ?? [])].map(String).sort()
@@ -273,6 +274,16 @@ export function gradeCodeTask(userCode, scoreItems) {
  * 返回 [{ blankId, hint, status, reference, explanation, commonMistake, contrast }]
  * status: 'correct' | 'wrong' | 'empty'
  */
+/** 代码填空比较用的规范化：忽略空白、大小写、引号风格差异 */
+export function normalizeCode(text) {
+  return String(text ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s]+/g, '')
+    .replace(/["'`]/g, '"')
+    .replace(/;+$/, '')
+}
+
 export function buildBlankAnswers(segments, blankValues = {}, referenceAnswers = {}) {
   if (!segments || !segments.length) return []
   const answers = []
@@ -289,12 +300,12 @@ export function buildBlankAnswers(segments, blankValues = {}, referenceAnswers =
         : '请参考上下文填写代码'
 
       const value = (blankValues[seg.id] || '').trim()
-      // 逐空判定：有标准答案则精确匹配，否则按关键词匹配
+      // 逐空判定：有标准答案则规范化后精确匹配，否则按关键词匹配
       const expected = referenceAnswers[seg.id]
       let status = 'empty'
       if (value) {
         if (expected) {
-          status = value.toLowerCase().includes(expected.toLowerCase().replace(/\s+/g, '').substring(0, 10)) ? 'correct' : 'wrong'
+          status = normalizeCode(value) === normalizeCode(expected) ? 'correct' : 'wrong'
         } else {
           const keywords = extractKeywords(hint)
           status = keywords.some((k) => value.toLowerCase().includes(String(k).toLowerCase())) ? 'correct' : 'wrong'
@@ -347,5 +358,44 @@ export const COMMON_MISTAKES = [
   '⚠️ 字符串记得加引号，如 data[\'列名\']',
   '⚠️ 检查导入语句：import pandas as pd / import numpy as np'
 ]
+
+/**
+ * 按「评分点 → 填空」映射判分，保证总分与填空红绿完全一致
+ *   绑定的填空全对 → 满分；过半 → 半分；否则 0
+ * 截图/文件类评分点绑定它验证的代码块（代码对 → 输出对）
+ * @param {Object} blankStatusMap { blankId: 'correct'|'wrong'|'empty' }
+ * @param {String} questionId
+ * @returns {Object|null} { total_score, maxScore, autoMax, items, docItems }
+ */
+export function gradeByScorePoints(blankStatusMap = {}, questionId) {
+  const map = SCORE_MAPPING[questionId]
+  if (!map || !map.items) return null
+  const items = []
+  let total = 0
+  for (const id of Object.keys(map.items)) {
+    const it = map.items[id]
+    const ids = it.b || []
+    if (!ids.length) {
+      items.push({ id, max_score: it.s, score: 0, correct: 0, total: 0, reason: '未绑定填空' })
+      continue
+    }
+    const correct = ids.filter((b) => blankStatusMap[b] === 'correct').length
+    const ratio = correct / ids.length
+    let score = 0
+    if (ratio >= 1) score = it.s
+    else if (ratio >= 0.5) score = Math.max(1, Math.round(it.s * 0.5))
+    total += score
+    items.push({ id, max_score: it.s, score, correct, total: ids.length })
+  }
+  return {
+    total_score: total,
+    maxScore: map.max,
+    autoMax: map.auto,
+    docMax: Math.max(0, map.max - map.auto),
+    items,
+    docItems: map.doc || [],
+    mode: 'points'
+  }
+}
 
 export { extractKeywords, PY_API }
