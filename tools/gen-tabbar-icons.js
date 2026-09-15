@@ -2,7 +2,7 @@
  * 生成 tabBar 图标 PNG（微信小程序 tabBar 只支持本地 png，不支持 svg）
  *
  * 用法：node tools/gen-tabbar-icons.js
- * 产物：images/tab/*.png（81×81，对应 24×24 设计栅格）
+ * 产物：assets/tab/*.png（81×81，对应 24×24 设计栅格）
  *
  * 不参与小程序打包：只被本脚本读写的图片才是产物，本文件本身不被任何页面引用。
  */
@@ -158,7 +158,7 @@ function encodePng(raw) {
 }
 
 /* ── 输出 ── */
-const outDir = path.join(__dirname, '..', 'images', 'tab')
+const outDir = path.join(__dirname, '..', 'assets', 'tab')
 fs.mkdirSync(outDir, { recursive: true })
 
 let n = 0
@@ -169,4 +169,4 @@ for (const [name, icon] of Object.entries(ICONS)) {
     n++
   }
 }
-console.log(`✅ 生成 ${n} 个 tabBar 图标 → images/tab/`)
+console.log(`✅ 生成 ${n} 个 tabBar 图标 → assets/tab/`)
