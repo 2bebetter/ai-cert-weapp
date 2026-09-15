@@ -2,6 +2,7 @@
  * 判分与统计纯函数 — 从现有项目直接迁移
  */
 import SCORE_MAPPING from './score-mapping.js'
+import { explainBlank, mistakesFor, cleanHint } from './api-guide.js'
 
 function normalized(keys) {
   return [...(keys ?? [])].map(String).sort()
@@ -313,17 +314,17 @@ export function buildBlankAnswers(segments, blankValues = {}, referenceAnswers =
       }
 
       const reference = expected || hint
+      // 解析基于「标准答案」讲 API 能力，而不是复述题目要求
+      const { text: explanation, api } = explainBlank(expected || '', hint)
       answers.push({
         blankId: seg.id,
-        hint,
+        hint: cleanHint(hint),
         status,
         userValue: value,
         reference,
-        explanation: `本空需要填写实现「${hint}」的代码，注意函数调用语法与参数`,
-        commonMistake: ['函数名拼写错误（s 结尾、大小写）', '缺少括号或引号', '参数顺序/列名拼写错'].join('；'),
-        contrast: expected
-          ? `正确参考：${expected}`
-          : '提示：该处为功能填空，参考上方代码模板中同位置的注释要求'
+        explanation,
+        commonMistake: mistakesFor(api),
+        contrast: ''
       })
     }
   }

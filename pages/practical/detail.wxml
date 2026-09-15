@@ -227,20 +227,12 @@
         </view>
         <scroll-view class="analysis-body" scroll-y enhanced show-scrollbar="{{true}}">
           <view class="analysis-block">
-            <text class="analysis-label">① 本空参考答案</text>
-            <text class="analysis-answer">{{currentAnalysis.reference}}</text>
-          </view>
-          <view class="analysis-block">
-            <text class="analysis-label">② 功能解析</text>
+            <text class="analysis-label">① 功能解析</text>
             <text class="analysis-text">{{currentAnalysis.explanation}}</text>
           </view>
           <view class="analysis-block">
-            <text class="analysis-label">③ 常见错误点</text>
+            <text class="analysis-label">② 常见错误点</text>
             <text class="analysis-text">{{currentAnalysis.commonMistake}}</text>
-          </view>
-          <view class="analysis-block">
-            <text class="analysis-label">④ 对错对比</text>
-            <text class="analysis-text">{{currentAnalysis.contrast}}</text>
           </view>
         </scroll-view>
       </view>
