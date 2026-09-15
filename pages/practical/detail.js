@@ -1,5 +1,5 @@
 import { getAIConfig, savePracticalSubmission, getPracticalSubmissions } from '../../utils/storage'
-import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, getCodeReferenceLines, COMMON_MISTAKES } from '../../utils/domain'
+import { practicalTaskType, splitDocSubQuestions, gradeCodeTask, buildBlankAnswers, extractKeywords } from '../../utils/domain'
 import { CLOUD_FUNCTIONS } from '../../utils/constants'
 
 Page({
@@ -13,14 +13,14 @@ Page({
     // 代码填空
     codeLines: [],
     blankValues: {},
+    blankAnswers: [],     // 逐空参考答案与解析 [{ blankId, hint, status, userValue, ... }]
+    blankStatusMap: {},  // { blankId: 'correct'|'wrong'|'empty' }
+    verified: false,       // 是否已验证
     // 评分标准折叠
     criteriaOpen: false,
     hasContent: false,
     gradeResult: null,
-    debugInfo: '',
-    referenceOpen: false,
-    codeReference: [],
-    commonMistakes: []
+    debugInfo: ''
   },
 
   onLoad(options) {
@@ -85,14 +85,14 @@ Page({
     // 生成代码行（code / mixed 且有模板）
     let codeLines = []
     let blankValues = {}
-    let codeReference = []
+    let blankAnswers = []
     const saved = this.loadDraft()
 
     if (hasTemplate && this.templates && this.templates[this.questionId]) {
       const segments = this.templates[this.questionId].segments || []
       if (saved?.blanks) blankValues = { ...saved.blanks }
       codeLines = this.splitSegmentsToLines(segments)
-      codeReference = getCodeReferenceLines(segments)
+      blankAnswers = buildBlankAnswers(segments, blankValues)
     }
 
     // 文档部分：document 用 answer/sections，mixed 用 docAnswer
@@ -124,8 +124,7 @@ Page({
       task,
       codeLines,
       blankValues,
-      codeReference,
-      commonMistakes: (type === 'code' || type === 'mixed') ? COMMON_MISTAKES : [],
+      blankAnswers,
       answer: docAnswer,
       docAnswer,
       docSections,
@@ -191,6 +190,9 @@ Page({
     const blankValues = { ...this.data.blankValues, [id]: e.detail.value }
     this.setData({
       blankValues,
+      verified: false,
+      blankStatusMap: {},
+      gradeResult: null,
       hasContent: this.computeHasContent(
         this.data.task.type, blankValues,
         this.data.task.type === 'mixed' ? this.data.docAnswer : this.data.answer,
@@ -251,26 +253,122 @@ Page({
     wx.showToast({ title: '草稿已保存', icon: 'success' })
   },
 
+  /** 代码题验证答案（规则匹配 + 逐空标记） */
+  verifyAnswers() {
+    const task = this.data.task
+    const segments = this.templates?.[this.questionId]?.segments || []
+    if (!segments.length) {
+      wx.showToast({ title: '无法获取代码模板', icon: 'none' })
+      return
+    }
+
+    const userCode = this.assembleCode()
+    const result = gradeCodeTask(userCode, task.scoreItems)
+    const blankValues = { ...this.data.blankValues }
+    const blankAnswers = buildBlankAnswers(segments, blankValues)
+
+    // 构建逐空状态映射 { blankId: 'correct'|'wrong'|'empty' }
+    const blankStatusMap = {}
+    for (const ba of blankAnswers) {
+      blankStatusMap[ba.blankId] = ba.status
+    }
+
+    this.setData({
+      gradeResult: { total_score: result.total_score, maxScore: result.maxScore, items: result.items, mode: 'rule' },
+      blankAnswers,
+      blankStatusMap,
+      verified: true
+    })
+  },
+
+  /** 切换单个空答案解析面板 */
+  toggleBlankAnswer(e) {
+    const idx = e.currentTarget.dataset.index
+    const list = [...this.data.blankAnswers]
+    if (list[idx]) {
+      list[idx] = { ...list[idx], open: !list[idx].open }
+      this.setData({ blankAnswers: list })
+    }
+  },
+
+  /** 混合题/文档题 AI 评测 */
   async submitGrade() {
     const task = this.data.task
     const config = getAIConfig()
 
-    // 纯代码题：规则匹配判分，不调 AI
-    if (task.type === 'code') {
+    // 混合题：拆成代码部分(规则匹配) + 文档部分(AI)
+    if (task.type === 'mixed') {
       const userCode = this.assembleCode()
-      const result = gradeCodeTask(userCode, task.scoreItems)
+      // 分离评分项：含 回答/规范/流程/描述 的走AI，其余走规则
+      const codeItems = []
+      const docItems = []
+      for (const item of (task.scoreItems || [])) {
+        const desc = item.desc || ''
+        if (/回答|规范|流程|描述/.test(desc)) docItems.push(item)
+        else codeItems.push(item)
+      }
+
+      let codeResult, aiResult
+      // 代码部分规则匹配
+      if (codeItems.length) {
+        codeResult = gradeCodeTask(userCode, codeItems)
+      }
+      // 文档部分AI评测
+      if (docItems.length && this.data.docAnswer.trim()) {
+        if (!config.apiKey) {
+          wx.showModal({
+            title: '未配置 API Key',
+            content: '文档部分需要 AI 评测，请先到"我的"页面配置 API Key。',
+            confirmText: '去配置',
+            success: (r) => { if (r.confirm) wx.switchTab({ url: '/pages/settings/settings' }) }
+          })
+          return
+        }
+        wx.showLoading({ title: '文档评测中…', mask: true })
+        try {
+          const res = await wx.cloud.callFunction({
+            name: CLOUD_FUNCTIONS.AI_GRADE,
+            data: {
+              apiKey: config.apiKey,
+              baseUrl: config.baseUrl,
+              model: config.model,
+              question: task.question,
+              scoreItems: docItems,
+              submission: { text: this.data.docAnswer }
+            }
+          })
+          wx.hideLoading()
+          aiResult = res.result
+        } catch (err) {
+          wx.hideLoading()
+          aiResult = { error: err.message }
+        }
+      }
+
+      // 合并结果
+      const allItems = [
+        ...(codeResult?.items || []),
+        ...(aiResult?.items || docItems.map((i) => ({ id: i.id, max_score: Number(i.score), score: 0, reason: 'AI 评测未完成' })))
+      ]
+      const totalScore = (codeResult?.total_score || 0) + (aiResult?.total_score || 0)
+      const maxScore = allItems.reduce((s, i) => s + (i.max_score || 0), 0)
       this.setData({
-        gradeResult: { total_score: result.total_score, maxScore: result.maxScore, items: result.items, mode: 'rule' }
+        gradeResult: {
+          total_score: totalScore, maxScore, items: allItems,
+          mode: 'mixed',
+          error: aiResult?.error || null
+        }
       })
       return
     }
 
+    // 文档题：AI 评测
     if (!config.apiKey) {
       wx.showModal({
         title: '未配置 API Key',
         content: '请先到"我的"页面配置 API Key，才能使用 AI 评测。',
         confirmText: '去配置',
-        success: (res) => { if (res.confirm) wx.switchTab({ url: '/pages/settings/settings' }) }
+        success: (r) => { if (r.confirm) wx.switchTab({ url: '/pages/settings/settings' }) }
       })
       return
     }
@@ -304,10 +402,6 @@ Page({
       wx.hideLoading()
       this.setData({ gradeResult: { error: err.message } })
     }
-  },
-
-  toggleReference() {
-    this.setData({ referenceOpen: !this.data.referenceOpen })
   },
 
   buildSubmission() {

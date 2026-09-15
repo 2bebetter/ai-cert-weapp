@@ -56,7 +56,7 @@
                 <view class="line-content">
                   <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
                     <input wx:if="{{part.kind === 'blank'}}"
-                      class="code-blank"
+                      class="code-blank {{verified ? (blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')) : ''}}"
                       value="{{blankValues[part.id] || ''}}"
                       data-blank-id="{{part.id}}"
                       bindinput="onBlankInput"
@@ -95,7 +95,7 @@
                 <view class="line-content">
                   <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
                     <input wx:if="{{part.kind === 'blank'}}"
-                      class="code-blank"
+                      class="code-blank {{verified ? (blankStatusMap[part.id] === 'correct' ? 'blank-correct' : (blankStatusMap[part.id] === 'empty' ? 'blank-empty' : 'blank-wrong')) : ''}}"
                       value="{{blankValues[part.id] || ''}}"
                       data-blank-id="{{part.id}}"
                       bindinput="onBlankInput"
@@ -108,6 +108,41 @@
               </view>
             </view>
           </scroll-view>
+
+          <!-- 逐空参考答案列表（验证后展示） -->
+          <view wx:if="{{verified && blankAnswers.length}}" class="blank-answers">
+            <text class="section-title" style="margin-top:16px">✅ 逐空解析 <text class="grade-mode">· 总分 {{gradeResult.total_score}} / {{gradeResult.maxScore}}</text></text>
+            <view wx:for="{{blankAnswers}}" wx:key="blankId" class="blank-answer-item" data-index="{{index}}" bindtap="toggleBlankAnswer">
+              <view class="blank-answer-header">
+                <text class="blank-answer-num">填空 {{index + 1}}</text>
+                <text class="blank-answer-status {{item.status === 'correct' ? 'status-ok' : 'status-bad'}}">
+                  {{item.status === 'correct' ? '✓ 正确' : (item.status === 'empty' ? '✗ 未作答' : '✗ 有误')}}
+                </text>
+                <text class="blank-answer-arrow">{{item.open ? '▲' : '▼'}}</text>
+              </view>
+              <text class="blank-answer-hint">{{item.hint}}</text>
+
+              <!-- 展开的解析面板 -->
+              <view wx:if="{{item.open}}" class="blank-analysis">
+                <view class="analysis-block">
+                  <text class="analysis-label">① 本空参考答案</text>
+                  <text class="analysis-text">{{item.reference}}</text>
+                </view>
+                <view class="analysis-block">
+                  <text class="analysis-label">② 代码功能解析</text>
+                  <text class="analysis-text">{{item.explanation}}</text>
+                </view>
+                <view class="analysis-block">
+                  <text class="analysis-label">③ 常见错误点</text>
+                  <text class="analysis-text">{{item.commonMistake}}</text>
+                </view>
+                <view class="analysis-block">
+                  <text class="analysis-label">④ 对比示例</text>
+                  <text class="analysis-text">{{item.contrast}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
         </block>
         <block wx:else>
           <view class="no-template-tip">等待代码模板加载，你可以先在这里写代码</view>
@@ -155,13 +190,16 @@
       <!-- 操作按钮 -->
       <view class="actions">
         <button class="btn btn-secondary" bindtap="saveDraft">保存草稿</button>
-        <button class="btn btn-primary" bindtap="submitGrade" disabled="{{!hasContent}}">
+        <button wx:if="{{task.type === 'code'}}" class="btn btn-primary" bindtap="verifyAnswers" disabled="{{!hasContent}}">
+          验证答案
+        </button>
+        <button wx:else class="btn btn-primary" bindtap="submitGrade" disabled="{{!hasContent}}">
           ✅ 智能评测
         </button>
       </view>
 
-      <!-- 评分结果 -->
-      <view wx:if="{{gradeResult}}" class="grade-result {{gradeResult.error ? 'bad' : 'ok'}}">
+      <!-- 评分结果（混合题/文档题 AI 评测结果） -->
+      <view wx:if="{{gradeResult && task.type !== 'code'}}" class="grade-result {{gradeResult.error ? 'bad' : 'ok'}}">
         <block wx:if="{{gradeResult.error}}">
           <text class="grade-title">判分失败：{{gradeResult.error}}</text>
         </block>
@@ -172,33 +210,6 @@
           </text>
           <view wx:for="{{gradeResult.items}}" wx:key="id" class="grade-item">
             <text>{{item.id}}：{{item.score}} / {{item.max_score}} · {{item.reason}}</text>
-          </view>
-        </block>
-      </view>
-
-      <!-- 参考答案（代码题/混合题） -->
-      <view wx:if="{{codeReference.length && !gradeResult.error}}" class="reference-section">
-        <view class="reference-header" bindtap="toggleReference">
-          <text class="reference-title">📖 参考答案与解析</text>
-          <text class="reference-arrow">{{referenceOpen ? '▲' : '▼'}}</text>
-        </view>
-        <block wx:if="{{referenceOpen}}">
-          <scroll-view class="code-scroll" scroll-y scroll-x enhanced show-scrollbar="{{true}}">
-            <view class="code-editor">
-              <view wx:for="{{codeReference}}" wx:for-item="line" wx:key="index" class="code-line">
-                <text class="line-num">{{index + 1}}</text>
-                <view class="line-content">
-                  <block wx:for="{{line}}" wx:for-item="part" wx:key="index">
-                    <text wx:if="{{part.kind === 'blank'}}" class="code-blank-ref">{{part.value}}</text>
-                    <text wx:else class="code-text">{{part.value}}</text>
-                  </block>
-                </view>
-              </view>
-            </view>
-          </scroll-view>
-          <view class="mistakes" wx:if="{{commonMistakes.length}}">
-            <text class="mistakes-title">常见错误提醒：</text>
-            <text wx:for="{{commonMistakes}}" wx:key="*this" class="mistake-item">{{item}}</text>
           </view>
         </block>
       </view>

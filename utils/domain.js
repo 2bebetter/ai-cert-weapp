@@ -245,7 +245,7 @@ function extractKeywords(desc) {
   return [...words]
 }
 
-/** 代码题规则判分 */
+/** 代码题规则判分 — 返回逐空结果 */
 export function gradeCodeTask(userCode, scoreItems) {
   const code = (userCode || '').toLowerCase()
   const maxScore = (scoreItems || []).reduce((s, i) => s + Number(i.score), 0)
@@ -265,6 +265,49 @@ export function gradeCodeTask(userCode, scoreItems) {
     return { id: item.id, max_score: Number(item.score), score, reason: `命中 ${hits.length}/${keywords.length} 个关键点` }
   })
   return { total_score: total, maxScore, items }
+}
+
+/**
+ * 从模板 segments + 用户填空值构建逐空参考答案与判定
+ * 返回 [{ blankId, hint, status, reference, explanation, commonMistake, contrast }]
+ * status: 'correct' | 'wrong' | 'empty'
+ */
+export function buildBlankAnswers(segments, blankValues = {}) {
+  if (!segments || !segments.length) return []
+  const answers = []
+  const ctx = { prevText: '' }
+  for (const seg of segments) {
+    if (seg.kind === 'text') {
+      ctx.prevText = seg.value
+    } else if (seg.kind === 'blank') {
+      // 提取前一句注释作为 hint
+      const lines = ctx.prevText.split('\n')
+      const hintLines = lines.filter((l) => l.trim().startsWith('#'))
+      const hint = hintLines.length > 0
+        ? hintLines[hintLines.length - 1].replace(/^#\s*/, '')
+        : '请参考上下文填写代码'
+
+      const value = (blankValues[seg.id] || '').trim()
+      // 从 hint 提取期望关键词
+      const keywords = extractKeywords(hint)
+      let status = 'empty'
+      if (value) {
+        status = keywords.some((k) => value.toLowerCase().includes(String(k).toLowerCase())) ? 'correct' : 'wrong'
+      }
+
+      answers.push({
+        blankId: seg.id,
+        hint,
+        status,
+        userValue: value,
+        reference: hint,          // 无标准答案时展示提示
+        explanation: `本空需要填写实现「${hint}」的代码，注意函数调用语法与参数`,
+        commonMistake: ['函数名拼写错误（s 结尾、大小写）', '缺少括号或引号', '参数顺序/列名拼写错'].join('；'),
+        contrast: '提示：该处为功能填空，参考上方代码模板中同位置的注释要求'
+      })
+    }
+  }
+  return answers
 }
 
 /** 从模板生成参考代码 lines（blank 带占位符） */
@@ -295,3 +338,5 @@ export const COMMON_MISTAKES = [
   '⚠️ 字符串记得加引号，如 data[\'列名\']',
   '⚠️ 检查导入语句：import pandas as pd / import numpy as np'
 ]
+
+export { extractKeywords, PY_API }
