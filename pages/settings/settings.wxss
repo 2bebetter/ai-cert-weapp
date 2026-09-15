@@ -47,7 +47,9 @@
   gap: 8px;
   margin-top: 12px;
 }
-.settings-actions .btn { flex: 1; }
+/* 原生 button 自带 margin-left/right: auto，会先于 flex-grow 分配
+   剩余空间，使下面的 flex: 1 失效、按钮缩成文字宽度并居中。 */
+.settings-actions .btn { flex: 1; margin: 0; }
 
 .test-result {
   display: block;
@@ -125,3 +127,7 @@
   gap: 12px;
   margin-top: 12px;
 }
+/* 原生 button 的 margin-left/right: auto 会抢在 justify-content 之前
+   分配掉剩余空间，使上面的 flex-end 失效，两个按钮被拆散到中段
+   （实测「取消」跑到距左 85px 处）。清零后才会真正靠右。 */
+.feedback-actions .btn { margin: 0; }

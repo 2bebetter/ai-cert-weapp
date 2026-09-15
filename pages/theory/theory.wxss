@@ -159,6 +159,10 @@
   padding: 0 16px;
   margin-top: 12px;
 }
+/* 原生 button 的 margin-left/right: auto 会抢在 justify-content 之前
+   分配剩余空间，使上面的 space-between 失效，两个按钮各自向内缩进
+   一段（实测左留白 72px、右留白 56.5px，本该贴住两端）。 */
+.nav-bar .btn { margin: 0; }
 
 /* 笔记弹窗 */
 .overlay {
@@ -310,3 +314,7 @@
   gap: 12px;
   margin-top: 16px;
 }
+/* 原生 button 的 margin-left/right: auto 会抢在 justify-content 之前
+   分配掉剩余空间，使上面的 flex-end 失效，两个按钮被拆散到中段
+   （实测两者之间裂开 138px 空隙）。清零后才会真正靠右。 */
+.jump-actions .btn { margin: 0; }

@@ -107,7 +107,10 @@
   padding: 0 16px;
   margin-top: 12px;
 }
-.exam-nav .btn { flex: 1; }
+/* 原生 button 自带 margin-left/right: auto，按 Flexbox 规范会先于
+   flex-grow 和 justify-content 分配剩余空间，导致下面的 flex: 1
+   完全失效、按钮缩成文字宽度并居中。必须先清零。 */
+.exam-nav .btn { flex: 1; margin: 0; }
 
 /* 悬浮导航按钮 */
 .exam-nav-btn {
