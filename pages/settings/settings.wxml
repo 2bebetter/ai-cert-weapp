@@ -42,9 +42,6 @@
   <view class="section about-section">
     <text class="about-title">AI Trainer 备考练习</text>
     <text class="about-version">v1.0.0</text>
-    <text class="about-desc">人工智能训练师（三级）国家职业技能等级认定</text>
-    <text class="about-desc">题库参考上海交通大学职业技能认证平台公开资料</text>
-    <text class="about-desc">评测基于自行提供的第三方 API Key</text>
     <button class="btn btn-ghost btn-sm github-btn" bindtap="copyGithubLink">
       ⭐ GitHub 上关注本项目
     </button>
