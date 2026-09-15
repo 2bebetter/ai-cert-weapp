@@ -322,6 +322,8 @@ page {
   border-radius: 8px;
   margin-right: 16px;
   box-sizing: border-box;
+  /* 横向滚动：内容不换行，由 scroll-view 承载横向溢出 */
+  white-space: nowrap;
 }
 
 .code-editor {
@@ -329,6 +331,7 @@ page {
   display: inline-block;
   min-width: 100%;
   box-sizing: border-box;
+  vertical-align: top;
 }
 
 /* 代码行：行高固定 28px */
@@ -351,9 +354,9 @@ page {
 }
 
 .line-content {
-  flex: 1;
-  min-width: 0;
-  padding-right: 12px;
+  /* 不收缩：让长行撑开容器，交由 scroll-view 横向滚动，避免文字被裁掉 */
+  flex: 0 0 auto;
+  padding-right: 24px;
   line-height: 28px;
   white-space: pre;
 }

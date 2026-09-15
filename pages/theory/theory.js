@@ -6,6 +6,8 @@ import {
   saveTheoryNote, getNotes
 } from '../../utils/storage'
 
+const PROGRESS_KEY = 'theory_progress'
+
 Page({
   data: {
     loading: true,
@@ -28,7 +30,11 @@ Page({
     filterTypeIndex: 0,
     filterAnswers: ['有答案的题', '全部理论题', '高可信/人工确认'],
     filterAnswerIndex: 0,
-    lastAnswerVisible: false
+    lastAnswerVisible: false,
+    // 题号跳转 / 进度恢复
+    jumpVisible: false,
+    jumpValue: '',
+    resumedFrom: 0
   },
 
   onLoad() {
@@ -59,13 +65,26 @@ Page({
 
     const all = questions || []
     const filtered = this.applyFilters(all)
-    const currentQuestion = filtered[0] || null
+
+    // 恢复上次做到哪一题（按题目 id 找；换筛选后找不到就回到第 1 题）
+    let startIndex = 0
+    let resumedFrom = 0
+    try {
+      const saved = wx.getStorageSync(PROGRESS_KEY) || {}
+      if (saved.questionId) {
+        const i = filtered.findIndex((q) => String(q.id) === String(saved.questionId))
+        if (i > 0) { startIndex = i; resumedFrom = i + 1 }
+      }
+    } catch (e) { /* 忽略 */ }
+
+    const currentQuestion = filtered[startIndex] || null
 
     this.setData({
       loading: false,
       loadError: false,
       filtered,
-      currentIndex: 0,
+      currentIndex: startIndex,
+      resumedFrom,
       currentQuestion,
       selectedKeys: [],
       submitted: false,
@@ -76,6 +95,7 @@ Page({
 
     if (currentQuestion) {
       this.syncQuestionMeta()
+      this.saveProgress()
     }
   },
 
@@ -313,24 +333,18 @@ Page({
   },
 
   prevQuestion() {
-    if (this.data.currentIndex <= 0) return
-    const idx = this.data.currentIndex - 1
-    const q = this.data.filtered[idx]
-    this.setData({
-      currentIndex: idx,
-      currentQuestion: q,
-      selectedKeys: [],
-      submitted: false,
-      feedback: null,
-      renderOptions: q ? this.buildRenderOptions(q, [], false) : []
-    })
-    this.syncQuestionMeta()
+    this.goToIndex(this.data.currentIndex - 1)
   },
 
   nextQuestion() {
-    if (this.data.currentIndex >= this.data.filtered.length - 1) return
-    const idx = this.data.currentIndex + 1
-    const q = this.data.filtered[idx]
+    this.goToIndex(this.data.currentIndex + 1)
+  },
+
+  /** 跳到指定下标（0 起） */
+  goToIndex(idx) {
+    const list = this.data.filtered
+    if (!list.length || idx < 0 || idx >= list.length) return
+    const q = list[idx]
     this.setData({
       currentIndex: idx,
       currentQuestion: q,
@@ -340,5 +354,53 @@ Page({
       renderOptions: q ? this.buildRenderOptions(q, [], false) : []
     })
     this.syncQuestionMeta()
+    this.saveProgress()
+  },
+
+  /** 当前题号写入本地，下次进来接着刷 */
+  saveProgress() {
+    try {
+      const q = this.data.currentQuestion
+      wx.setStorageSync(PROGRESS_KEY, {
+        questionId: q ? q.id : '',
+        index: this.data.currentIndex,
+        at: Date.now()
+      })
+    } catch (e) { /* 忽略 */ }
+  },
+
+  /* ── 题号跳转 ── */
+  openJump() {
+    if (!this.data.filtered.length) return
+    this.setData({ jumpVisible: true, jumpValue: String(this.data.currentIndex + 1) })
+  },
+
+  closeJump() {
+    this.setData({ jumpVisible: false })
+  },
+
+  onJumpInput(e) {
+    this.setData({ jumpValue: e.detail.value })
+  },
+
+  confirmJump() {
+    const total = this.data.filtered.length
+    const n = parseInt(this.data.jumpValue, 10)
+    if (!n || isNaN(n) || n < 1 || n > total) {
+      wx.showToast({ title: '请输入 1 - ' + total, icon: 'none' })
+      return
+    }
+    this.setData({ jumpVisible: false, resumedFrom: 0 })
+    this.goToIndex(n - 1)
+  },
+
+  jumpFirst() {
+    this.setData({ jumpVisible: false, resumedFrom: 0 })
+    this.goToIndex(0)
+  },
+
+  jumpLast() {
+    this.setData({ jumpVisible: false, resumedFrom: 0 })
+    this.goToIndex(this.data.filtered.length - 1)
   }
 })

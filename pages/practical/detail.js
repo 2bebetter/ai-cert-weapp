@@ -25,7 +25,7 @@ Page({
     // 题干 / 评分标准 的展开状态（本地保留，不随弹窗、验证答案重置）
     qSections: null,      // { background, tasks, fields, output }
     questionOpen: false,  // 题干默认收起，只显示背景简述 + 前 3 条任务
-    criteriaOpen: true,   // 评分标准默认展开
+    criteriaOpen: false,  // 评分标准默认收起
     hasMoreTasks: false,
     hasContent: false,
     gradeResult: null,
@@ -132,7 +132,7 @@ Page({
     const uiSaved = (wx.getStorageSync(UI_STATE_KEY) || {})[this.questionId] || {}
     const uiState = {
       questionOpen: !!uiSaved.questionOpen,
-      criteriaOpen: uiSaved.criteriaOpen === undefined ? true : !!uiSaved.criteriaOpen
+      criteriaOpen: !!uiSaved.criteriaOpen
     }
 
     const qSections = parseQuestionSections(q.question || '')

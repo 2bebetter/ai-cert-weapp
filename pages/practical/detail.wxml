@@ -16,12 +16,12 @@
   <view class="content" wx:else>
     <!-- ═══════════ 1. 题干卡片 ═══════════ -->
     <view class="card question-card">
-      <view class="card-head">
+      <view class="card-head" bindtap="toggleQuestion">
         <view class="card-head-left">
           <view class="icon-book"></view>
           <text class="card-title">题目背景与任务要求</text>
         </view>
-        <view class="toggle-btn" bindtap="toggleQuestion">
+        <view class="toggle-btn">
           <text>{{questionOpen ? '收起' : '展开'}}</text>
           <view class="chev {{questionOpen ? 'chev-up' : ''}}"></view>
         </view>
@@ -42,12 +42,14 @@
         <view class="qsec" wx:if="{{qSections.tasks.length}}">
           <text class="qsec-label">任务要求</text>
           <view class="task-list">
-            <view wx:for="{{qSections.tasks}}" wx:key="num" wx:if="{{questionOpen || index < 3}}" class="task-item">
-              <text class="task-num">{{item.num}}</text>
-              <view class="task-text">
-                <text wx:for="{{item.parts}}" wx:for-item="p" wx:key="index" class="{{p.code ? 'mono' : ''}}">{{p.v}}</text>
+            <block wx:for="{{qSections.tasks}}" wx:key="num">
+              <view wx:if="{{questionOpen || index < 3}}" class="task-item">
+                <text class="task-num">{{item.num}}</text>
+                <view class="task-text">
+                  <text wx:for="{{item.parts}}" wx:for-item="p" wx:key="index" class="{{p.code ? 'mono' : ''}}">{{p.v}}</text>
+                </view>
               </view>
-            </view>
+            </block>
           </view>
           <view wx:if="{{!questionOpen && hasMoreTasks}}" class="more-hint" bindtap="toggleQuestion">
             还有 {{qSections.tasks.length - 3}} 条任务，点击展开查看

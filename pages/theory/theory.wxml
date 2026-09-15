@@ -27,11 +27,16 @@
         <text class="arrow">▼</text>
       </view>
     </picker>
-    <view class="filter-info">{{currentIndex + 1}} / {{filtered.length}}</view>
+    <view class="filter-info jump-entry" bindtap="openJump">
+      <text class="jump-cur">{{currentIndex + 1}}</text>
+      <text class="jump-sep">/ {{filtered.length}}</text>
+      <text class="jump-go">跳转</text>
+    </view>
   </view>
 
   <!-- 题目卡片 -->
   <scroll-view scroll-y class="question-scroll" wx:if="{{currentQuestion && !loading && !loadError}}">
+    <view class="resume-tip" wx:if="{{resumedFrom}}">已从上次的第 {{resumedFrom}} 题继续</view>
     <view class="card question-card">
       <view class="question-head">
         <text class="tag {{typeTagClass}}">{{typeLabel}}</text>
@@ -89,6 +94,33 @@
     <text>📚</text>
     <text>当前筛选没有题目</text>
     <text class="placeholder" wx:if="{{filterAnswerIndex === 0}}">当前筛选为"有答案的题"，试试切换到"全部理论题"</text>
+  </view>
+
+  <!-- 题号跳转弹窗 -->
+  <view class="overlay {{jumpVisible ? '' : 'hidden'}}" catchtap="closeJump">
+    <view class="jump-modal" catchtap="noop">
+      <text class="jump-title">跳转到题目</text>
+      <view class="jump-row">
+        <input
+          class="jump-input"
+          type="number"
+          value="{{jumpValue}}"
+          bindinput="onJumpInput"
+          bindconfirm="confirmJump"
+          placeholder="题号"
+          confirm-type="go"
+        />
+        <text class="jump-total">/ {{filtered.length}}</text>
+      </view>
+      <view class="jump-quick">
+        <view class="jump-chip" catchtap="jumpFirst">第 1 题</view>
+        <view class="jump-chip" catchtap="jumpLast">最后一题</view>
+      </view>
+      <view class="jump-actions">
+        <button class="btn btn-ghost" catchtap="closeJump">取消</button>
+        <button class="btn btn-primary" catchtap="confirmJump">跳转</button>
+      </view>
+    </view>
   </view>
 
   <!-- 笔记弹窗 -->
