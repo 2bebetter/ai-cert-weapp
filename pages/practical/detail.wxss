@@ -15,8 +15,8 @@ page {
 /* ── 内容容器：最大 760px，页面居中 ── */
 /* 内容容器：三张卡片共用这一条宽度 */
 .content {
-  width: 96%;
-  max-width: 1040px;   /* 窄屏吃满、宽屏不被 760px 卡死 */
+  width: 98%;
+  max-width: 1400px;   /* 基本不设限，窄屏吃满、宽屏也铺开 */
   margin: 0 auto;
   padding: 20px 0 40px;
   box-sizing: border-box;
@@ -26,7 +26,7 @@ page {
 .card {
   background: #ffffff;
   border-radius: 8px;
-  padding: 14px;
+  padding: 12px;
   margin-bottom: 20px;
   box-sizing: border-box;
   overflow: hidden;
@@ -323,7 +323,7 @@ page {
 /* ══════════ 3. 代码作答区 ══════════ */
 /* 作答区：与其它卡片同宽同内边距（原来是左16/右0 + margin-right 的补丁） */
 .answer-section {
-  padding: 14px;
+  padding: 12px;
 }
 
 .answer-section .card-head {
@@ -358,8 +358,8 @@ page {
 
 .line-num {
   flex-shrink: 0;
-  width: 34px;
-  padding-right: 8px;
+  width: 30px;
+  padding-right: 6px;
   text-align: right;
   font-family: 'SF Mono', Menlo, Consolas, monospace;
   font-size: 11px;
@@ -370,7 +370,7 @@ page {
 .line-content {
   /* 不收缩：让长行撑开容器，交由 scroll-view 横向滚动，避免文字被裁掉 */
   flex: 0 0 auto;
-  padding-right: 24px;
+  padding-right: 14px;
   line-height: 28px;
   white-space: pre;
 }
