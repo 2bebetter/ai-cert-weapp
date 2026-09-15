@@ -92,6 +92,12 @@
   font-variant-numeric: tabular-nums;
 }
 .exam-timer.urgent { color: var(--danger); }
+/* 收藏按钮靠右。
+   原生 button 自带 margin-left/right: auto，按 Flexbox 规范 auto margin
+   会先于对齐规则吃掉全部剩余空间，于是左右各分一半，图标浮在中间
+   （既不靠左也不靠右）。清零后改用左 auto margin 推到最右，
+   与理论学习页 .question-actions 的收藏图标位置保持一致。 */
+.exam-topbar .btn-ghost { margin: 0 0 0 auto; }
 .exam-scroll { flex: 1; padding-bottom: 16px; }
 
 .exam-nav {
